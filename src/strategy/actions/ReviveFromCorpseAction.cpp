@@ -17,7 +17,10 @@
 
 bool ReviveFromCorpseAction::Execute(Event event)
 {
-    Player* master = botAI->GetGroupMaster();
+    Player* master = botAI->GetMaster();
+    if (!master)
+        master = botAI->GetGroupMaster();
+
     Corpse* corpse = bot->GetCorpse();
 
     // follow master when master revives
@@ -70,7 +73,8 @@ bool ReviveFromCorpseAction::Execute(Event event)
     WorldPacket packet(CMSG_RECLAIM_CORPSE);
     packet << bot->GetGUID();
     bot->GetSession()->HandleReclaimCorpseOpcode(packet);
-
+    if (botAI->HasRealPlayerMaster() && bot->GetDistance2d(master) > 3.0f && !bot->IsBeingTeleported() && !master->IsBeingTeleported())
+        bot->TeleportTo(master->GetMapId(), master->GetPositionX(), master->GetPositionY(), master->GetPositionZ(), 0);
     return true;
 }
 
@@ -91,11 +95,12 @@ bool FindCorpseAction::Execute(Event event)
     //         sPlayerbotAIConfig->farDistance)) return false;
     // }
 
-    uint32 dCount = AI_VALUE(uint32, "death count");
+    uint32 dCount = AI_VALUE(uint32, "death count");//优化性能
 
-    if (!botAI->HasRealPlayerMaster())
+    if (!botAI->HasRealPlayerMaster() || 
+        (botAI->HasRealPlayerMaster() && (botAI->GetMaster()->IsAlive() || (master && master->IsAlive()))))
     {
-        if (dCount >= 5)
+        if (dCount >= 2)//优化性能
         {
             // LOG_INFO("playerbots", "Bot {} {}:{} <{}>: died too many times, was revived and teleported",
             //     bot->GetGUID().ToString().c_str(), bot->GetTeamId() == TEAM_ALLIANCE ? "A" : "H", bot->GetLevel(),

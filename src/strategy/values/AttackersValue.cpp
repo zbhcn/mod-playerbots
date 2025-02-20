@@ -54,17 +54,67 @@ GuidVector AttackersValue::Calculate()
         result.push_back(bot->duel->Opponent->GetGUID());
 
     // workaround for bots of same faction not fighting in arena
-    if (bot->InArena())
+    //if (bot->InArena())
+    //{
+    //    GuidVector possibleTargets = AI_VALUE(GuidVector, "possible targets");
+    //    for (ObjectGuid const guid : possibleTargets)
+    //    {
+    //        Unit* unit = botAI->GetUnit(guid);
+    //        if (unit && unit->IsPlayer() && IsValidTarget(unit, bot))
+    //        {
+    //            result.push_back(unit->GetGUID());
+    //        }
+    //    }
+    //}
+    // 修改后的竞技场目标逻辑：按优先级攻击敌方目标
+    if (bot->InBattleground() || bot->InArena())
     {
         GuidVector possibleTargets = AI_VALUE(GuidVector, "possible targets");
-        for (ObjectGuid const guid : possibleTargets)
+        std::map<int, GuidVector> priorityTargets;  // 按优先级存储目标
+
+        // 遍历所有可能的目标
+        for (ObjectGuid const& guid : possibleTargets)
         {
-            Unit* unit = botAI->GetUnit(guid);
-            if (unit && unit->IsPlayer() && IsValidTarget(unit, bot))
+            if (Unit* unit = botAI->GetUnit(guid))
             {
-                result.push_back(unit->GetGUID());
+                if (unit->IsPlayer() && IsValidTarget(unit, bot) && bot->IsHostileTo(unit))
+                {
+                    int priority = 6;  // 默认优先级为6（其他职业）
+                    switch (unit->getClass())
+                    {
+                        case CLASS_HUNTER:
+                            priority = 1;
+                            break;  // 猎人优先级为1
+                        case CLASS_PRIEST:
+                            priority = 2;
+                            break;  // 牧师优先级为2
+                        case CLASS_ROGUE:
+                            priority = 3;
+                            break;  // 盗贼优先级为3
+                        case CLASS_MAGE:
+                            priority = 4;
+                            break;  // 法师优先级为4
+                        case CLASS_WARLOCK:
+                            priority = 5;
+                            break;  // 术士优先级为5
+                        default:
+                            priority = 6;
+                            break;  // 其他职业优先级为6
+                    }
+                    priorityTargets[priority].push_back(unit->GetGUID());  // 按优先级分类存储
+                }
             }
         }
+
+        // 按优先级顺序将目标加入结果列表
+        for (int priority = 1; priority <= 6; ++priority)
+        {
+            if (priorityTargets.find(priority) != priorityTargets.end())
+            {
+                result.insert(result.end(), priorityTargets[priority].begin(), priorityTargets[priority].end());
+            }
+        }
+        //botAI->GetAiObjectContext()->GetValue<GuidVector>("prioritized targets")->Set({result});//设置为优先目标
     }
 
     return result;
@@ -162,15 +212,17 @@ bool AttackersValue::IsPossibleTarget(Unit* attacker, Player* bot, float range)
         if (masterBotAI && !masterBotAI->IsRealPlayer())
             isMemberBotGroup = true;
     }
-
     // bool inCannon = botAI->IsInVehicle(false, true);
     // bool enemy = botAI->GetAiObjectContext()->GetValue<Unit*>("enemy player target")->Get();
+    // 在竞技场中，忽略宠物目标
+    //if (attacker && (bot->InBattleground() || bot->InArena()) && attacker->IsPet())
+    //    return false;
 
     return attacker && attacker->IsVisible() && attacker->IsInWorld() && attacker->GetMapId() == bot->GetMapId() &&
            !attacker->isDead() &&
            !attacker->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NON_ATTACKABLE_2) &&
            // (inCannon || !attacker->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE)) &&
-           // attacker->CanSeeOrDetect(bot) &&
+           //attacker->CanSeeOrDetect(bot) &&
            // !(attacker->HasUnitState(UNIT_STATE_STUNNED) && botAI->HasAura("shackle undead", attacker)) &&
            // !((attacker->IsPolymorphed() || botAI->HasAura("sap", attacker) || /*attacker->IsCharmed() ||*/
            // attacker->isFeared()) && !rti) &&
@@ -179,7 +231,8 @@ bool AttackersValue::IsPossibleTarget(Unit* attacker, Player* bot, float range)
            // !(attacker->GetGUID().IsPet() && enemy) &&
            !(attacker->GetCreatureType() == CREATURE_TYPE_CRITTER && !attacker->IsInCombat()) &&
            !attacker->HasUnitFlag(UNIT_FLAG_IMMUNE_TO_PC) && !attacker->HasUnitFlag(UNIT_FLAG_NOT_SELECTABLE) &&
-           bot->CanSeeOrDetect(attacker) &&
+           // 为了战场中禁用视野检查
+           (bot->InArena() || bot->CanSeeOrDetect(attacker)) &&
            !(sPlayerbotAIConfig->IsPvpProhibited(attacker->GetZoneId(), attacker->GetAreaId()) &&
              (attacker->GetGUID().IsPlayer() || attacker->GetGUID().IsPet())) &&
            !(attacker->IsPlayer() && !attacker->IsPvP() && !attacker->IsFFAPvP() &&
@@ -197,7 +250,8 @@ bool AttackersValue::IsPossibleTarget(Unit* attacker, Player* bot, float range)
 
 bool AttackersValue::IsValidTarget(Unit* attacker, Player* bot)
 {
-    return IsPossibleTarget(attacker, bot) && bot->IsWithinLOSInMap(attacker);
+    //竞技场禁用视野检查
+    return IsPossibleTarget(attacker, bot) && (bot->InArena() || bot->IsWithinLOSInMap(attacker));
     // (attacker->GetThreatMgr().getCurrentVictim() || attacker->GetGuidValue(UNIT_FIELD_TARGET) ||
     // attacker->GetGUID().IsPlayer() || attacker->GetGUID() ==
     // GET_PLAYERBOT_AI(bot)->GetAiObjectContext()->GetValue<ObjectGuid>("pull target")->Get());
@@ -215,6 +269,10 @@ bool PossibleAddsValue::Calculate()
 
         if (Unit* add = botAI->GetUnit(guid))
         {
+            // 在竞技场中，忽略宠物目标
+            //if ((bot->InBattleground() || bot->InArena()) && add->IsPet())
+            //    continue;
+
             if (!add->GetTarget() && !add->GetThreatMgr().getCurrentVictim() && add->IsHostileTo(bot))
             {
                 for (ObjectGuid const attackerGUID : attackers)

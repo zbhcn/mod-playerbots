@@ -27,10 +27,10 @@ bool TradeAction::Execute(Event event)
         if (!player && botAI->GetMaster())
             player = botAI->GetMaster();
 
-        if (!player)
+        if (!player || (bot->GetMap() && bot->GetMap()->IsDungeon()))//禁止机器人在副本中找主人交易
             return false;
 
-        if (!player->GetTrader())
+        if (!player->GetTrader() && bot->GetGroup() && !bot->GetGroup()->isRaidGroup())
         {
             WorldPacket packet(CMSG_INITIATE_TRADE);
             packet << player->GetGUID();

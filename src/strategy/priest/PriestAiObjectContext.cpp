@@ -199,6 +199,7 @@ public:
         creators["resurrection"] = &PriestAiObjectContextInternal::resurrection;
         creators["circle of healing on party"] = &PriestAiObjectContextInternal::circle_of_healing;
         creators["psychic scream"] = &PriestAiObjectContextInternal::psychic_scream;
+        creators["psychic horror"] = &PriestAiObjectContextInternal::psychic_horror;
         creators["vampiric touch"] = &PriestAiObjectContextInternal::vampiric_touch;
         creators["vampiric touch on attacker"] = &PriestAiObjectContextInternal::vampiric_touch_on_attacker;
         creators["vampiric embrace"] = &PriestAiObjectContextInternal::vampiric_embrace;
@@ -258,6 +259,7 @@ private:
         return new CastVampiricTouchOnAttackerAction(botAI);
     }
     static Action* psychic_scream(PlayerbotAI* botAI) { return new CastPsychicScreamAction(botAI); }
+    static Action* psychic_horror(PlayerbotAI* botAI) { return new CastPsychicHorrorAction(botAI); }
     static Action* circle_of_healing(PlayerbotAI* botAI) { return new CastCircleOfHealingAction(botAI); }
     static Action* resurrection(PlayerbotAI* botAI) { return new CastResurrectionAction(botAI); }
     static Action* shadow_word_pain(PlayerbotAI* botAI) { return new CastPowerWordPainAction(botAI); }

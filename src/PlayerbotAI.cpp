@@ -197,7 +197,7 @@ PlayerbotAI::PlayerbotAI(Player* bot)
     masterOutgoingPacketHandlers.AddHandler(MSG_RAID_READY_CHECK_FINISHED, "ready check finished");
     masterOutgoingPacketHandlers.AddHandler(SMSG_QUESTGIVER_OFFER_REWARD, "questgiver quest details");
 
-    // quest packet
+    // quest packet//优化性能
     masterIncomingPacketHandlers.AddHandler(CMSG_QUESTGIVER_COMPLETE_QUEST, "complete quest");
     masterIncomingPacketHandlers.AddHandler(CMSG_QUESTGIVER_ACCEPT_QUEST, "accept quest");
     masterIncomingPacketHandlers.AddHandler(CMSG_QUEST_CONFIRM_ACCEPT, "confirm quest");
@@ -232,13 +232,11 @@ void PlayerbotAI::UpdateAI(uint32 elapsed, bool minimal)
         nextAICheckDelay = 0;
 
     // Early return if bot is in invalid state
-    if (!bot || !bot->IsInWorld() || !bot->GetSession() || bot->GetSession()->isLogingOut() ||
-        bot->IsDuringRemoveFromWorld())
+    if (!bot || !bot->IsInWorld() || !bot->GetSession() || bot->GetSession()->isLogingOut() || bot->IsDuringRemoveFromWorld())
         return;
 
     // Handle cheat options (set bot health and power if cheats are enabled)
-    if (bot->IsAlive() &&
-        (static_cast<uint32>(GetCheat()) > 0 || static_cast<uint32>(sPlayerbotAIConfig->botCheatMask) > 0))
+    if (bot->IsAlive() && (static_cast<uint32>(GetCheat()) > 0 || static_cast<uint32>(sPlayerbotAIConfig->botCheatMask) > 0))
     {
         if (HasCheat(BotCheatMask::health))
             bot->SetFullHealth();
@@ -289,10 +287,8 @@ void PlayerbotAI::UpdateAI(uint32 elapsed, bool minimal)
                     isHeal = true;
 
                 // Check if spell is single-target
-                if ((spellInfo->Effects[i].TargetA.GetTarget() &&
-                     spellInfo->Effects[i].TargetA.GetTarget() != TARGET_UNIT_TARGET_ALLY) ||
-                    (spellInfo->Effects[i].TargetB.GetTarget() &&
-                     spellInfo->Effects[i].TargetB.GetTarget() != TARGET_UNIT_TARGET_ALLY))
+                if ((spellInfo->Effects[i].TargetA.GetTarget() && spellInfo->Effects[i].TargetA.GetTarget() != TARGET_UNIT_TARGET_ALLY) || 
+                    (spellInfo->Effects[i].TargetB.GetTarget() && spellInfo->Effects[i].TargetB.GetTarget() != TARGET_UNIT_TARGET_ALLY))
                 {
                     isSingleTarget = false;
                 }
@@ -307,8 +303,7 @@ void PlayerbotAI::UpdateAI(uint32 elapsed, bool minimal)
             }
 
             // Ensure bot is facing target if necessary
-            if (spellTarget && !bot->HasInArc(CAST_ANGLE_IN_FRONT, spellTarget) &&
-                (spellInfo->FacingCasterFlags & SPELL_FACING_FLAG_INFRONT))
+            if (spellTarget && !bot->HasInArc(CAST_ANGLE_IN_FRONT, spellTarget) && (spellInfo->FacingCasterFlags & SPELL_FACING_FLAG_INFRONT))
             {
                 sServerFacade->SetFacingTo(bot, spellTarget);
             }
@@ -361,20 +356,52 @@ void PlayerbotAI::UpdateAIGroupMembership()
 
     Group* group = bot->GetGroup();
 
-    if (!bot->InBattleground() && !bot->inRandomLfgDungeon() && !group->isLFGGroup())
+    // 自动传送到主人身边
+    if (bot->GetGroup() && bot->GetMap())
     {
-        Player* leader = group->GetLeader();
-        if (leader && leader != bot)  // Ensure the leader is valid and not the bot itself
+        uint32 count = 0;
+        for (GroupReference* gref = bot->GetGroup()->GetFirstMember(); gref; gref = gref->next())
         {
-            PlayerbotAI* leaderAI = GET_PLAYERBOT_AI(leader);
-            if (leaderAI && !leaderAI->IsRealPlayer())
+            Player* player = gref->GetSource();
+            if (GET_PLAYERBOT_AI(player))
+                count++;
+        }
+        if (count > sPlayerbotAIConfig->botcount)
+        {
+            bot->RemoveFromGroup();
+            GET_PLAYERBOT_AI(bot)->SetMaster(nullptr);
+            ResetStrategies();
+        }
+        if (master && master->IsInWorld() && master->IsAlive() && master->GetZoneId() != bot->GetZoneId() &&
+            !bot->IsBeingTeleported() && !master->IsBeingTeleported())
+        {
+            if (bot->isDead())
             {
-                bot->RemoveFromGroup();
-                ResetStrategies();
+                bot->ResurrectPlayer(1.0f, false);
+                bot->DurabilityRepairAll(false, 1.0f, false);
+            }
+            if (master->GetMap() && master->GetMap()->IsDungeon())
+            {
+                InstanceMap* map = master->GetMap()->ToInstanceMap();
+                if (map)
+                {
+                    if (map->CannotEnter(bot) == Map::CANNOT_ENTER_MAX_PLAYERS)
+                    {
+                        TellError("我无法进入这个副本");
+                        return;
+                    }
+                    if (!bot->inRandomLfgDungeon())//随机本不出来
+                        bot->TeleportTo(master->GetMapId(), master->GetPositionX(), master->GetPositionY(),
+                                    master->GetPositionZ(), 0);
+                    if (!HasStrategy("follow", BOT_STATE_NON_COMBAT))
+                    {
+                        ChangeStrategy("+follow", BOT_STATE_NON_COMBAT);
+                    }
+                }
             }
         }
     }
-    else if (group->isLFGGroup())
+    if (group->isLFGGroup())
     {
         bool hasRealPlayer = false;
 
@@ -382,7 +409,7 @@ void PlayerbotAI::UpdateAIGroupMembership()
         for (GroupReference* ref = group->GetFirstMember(); ref; ref = ref->next())
         {
             Player* member = ref->GetSource();
-            if (!member)
+            if (!member || member->isAFK() || (member && !member->GetSession() && !member->IsBeingTeleported()))//当玩家暂离或者离线时使机器人离队
                 continue;
 
             PlayerbotAI* memberAI = GET_PLAYERBOT_AI(member);
@@ -390,14 +417,38 @@ void PlayerbotAI::UpdateAIGroupMembership()
                 continue;
 
             hasRealPlayer = true;
+
+            if (member && group->IsLeader(bot->GetGUID()))
+                SetMaster(member);//进随机本后主动让队长
             break;
         }
         if (!hasRealPlayer)
         {
             bot->RemoveFromGroup();
             ResetStrategies();
+            // if (!bot->IsBeingTeleported())
+            //     bot->TeleportTo(571, 5813.87, 448.76, 658.75, 2.237);  // 传送回达拉然
+            for (uint8 i = 0; i < MAX_DIFFICULTY; ++i)
+            {
+                const BoundInstancesMap& binds =
+                    sInstanceSaveMgr->PlayerGetBoundInstances(bot->GetGUID(), Difficulty(i));
+                if (binds.empty())
+                    continue;
+                for (BoundInstancesMap::const_iterator itr = binds.begin(); itr != binds.end();)
+                {
+                    if (itr->first != bot->GetMapId())
+                    {
+                        sInstanceSaveMgr->PlayerUnbindInstance(bot->GetGUID(), itr->first, Difficulty(i), true, bot);
+                        itr = binds.begin();
+                    }
+                    else
+                    {
+                        ++itr;
+                    }
+                }
+            }
         }
-    }
+    }    
 }
 
 void PlayerbotAI::UpdateAIInternal([[maybe_unused]] uint32 elapsed, bool minimal)
@@ -766,7 +817,7 @@ void PlayerbotAI::Reset(bool full)
     bot->GetMotionMaster()->Clear();
 
     InterruptSpell();
-
+    
     if (full)
     {
         for (uint8 i = 0; i < BOT_STATE_MAX; i++)
@@ -1065,7 +1116,7 @@ void PlayerbotAI::HandleBotOutgoingPacket(WorldPacket const& packet)
 
                     if (message.starts_with(sPlayerbotAIConfig->toxicLinksPrefix) &&
                         (GetChatHelper()->ExtractAllItemIds(message).size() > 0 ||
-                         GetChatHelper()->ExtractAllQuestIds(message).size() > 0) &&
+                        GetChatHelper()->ExtractAllQuestIds(message).size() > 0) &&
                         sPlayerbotAIConfig->toxicLinksRepliesChance)
                     {
                         if (urand(0, 50) > 0 || urand(1, 100) > sPlayerbotAIConfig->toxicLinksRepliesChance)
@@ -1074,7 +1125,7 @@ void PlayerbotAI::HandleBotOutgoingPacket(WorldPacket const& packet)
                         }
                     }
                     else if ((GetChatHelper()->ExtractAllItemIds(message).count(19019) &&
-                              sPlayerbotAIConfig->thunderfuryRepliesChance))
+                            sPlayerbotAIConfig->thunderfuryRepliesChance))
                     {
                         if (urand(0, 60) > 0 || urand(1, 100) > sPlayerbotAIConfig->thunderfuryRepliesChance)
                         {
@@ -1349,8 +1400,7 @@ void PlayerbotAI::DoNextAction(bool min)
             for (GroupReference* gref = group->GetFirstMember(); gref; gref = gref->next())
             {
                 Player* member = gref->GetSource();
-                if (!member || member == bot || member == newMaster || !member->IsInWorld() ||
-                    !member->IsInSameRaidWith(bot))
+                if (!member || member == bot || member == newMaster || !member->IsInWorld() || !member->IsInSameRaidWith(bot))
                     continue;
 
                 PlayerbotAI* memberBotAI = GET_PLAYERBOT_AI(member);
@@ -1399,7 +1449,7 @@ void PlayerbotAI::DoNextAction(bool min)
             botAI->ChangeStrategy("+follow", BOT_STATE_NON_COMBAT);
 
             if (botAI->GetMaster() == botAI->GetGroupMaster())
-                botAI->TellMaster("Hello, I follow you!");
+                botAI->TellMaster("你好，我跟着你！");
             else
                 botAI->TellMaster(!urand(0, 2) ? "Hello!" : "Hi!");
         }
@@ -1486,64 +1536,64 @@ void PlayerbotAI::ApplyInstanceStrategies(uint32 mapId, bool tellMaster)
             strategyName = "naxx";
             break;
         case 574:
-            strategyName = "wotlk-uk";  // Utgarde Keep
+            strategyName = "wotlk-uk";      // Utgarde Keep
             break;
         case 575:
-            strategyName = "wotlk-up";  // Utgarde Pinnacle
+            strategyName = "wotlk-up";      // Utgarde Pinnacle
             break;
         case 576:
-            strategyName = "wotlk-nex";  // The Nexus
+            strategyName = "wotlk-nex";     // The Nexus
             break;
         case 578:
-            strategyName = "wotlk-occ";  // The Oculus
+            strategyName = "wotlk-occ";     // The Oculus
             break;
         case 595:
-            strategyName = "wotlk-cos";  // The Culling of Stratholme
+            strategyName = "wotlk-cos";     // The Culling of Stratholme
             break;
         case 599:
-            strategyName = "wotlk-hos";  // Halls of Stone
+            strategyName = "wotlk-hos";     // Halls of Stone
             break;
         case 600:
-            strategyName = "wotlk-dtk";  // Drak'Tharon Keep
+            strategyName = "wotlk-dtk";     // Drak'Tharon Keep
             break;
         case 601:
-            strategyName = "wotlk-an";  // Azjol-Nerub
+            strategyName = "wotlk-an";      // Azjol-Nerub
             break;
         case 602:
-            strategyName = "wotlk-hol";  // Halls of Lightning
+            strategyName = "wotlk-hol";     // Halls of Lightning
             break;
         case 603:
             strategyName = "uld";
             break;
         case 604:
-            strategyName = "wotlk-gd";  // Gundrak
+            strategyName = "wotlk-gd";      // Gundrak
             break;
         case 608:
-            strategyName = "wotlk-vh";  // Violet Hold
+            strategyName = "wotlk-vh";      // Violet Hold
             break;
         case 615:
-            strategyName = "wotlk-os";  // Obsidian Sanctum
+            strategyName = "wotlk-os";      // Obsidian Sanctum
             break;
         case 616:
-            strategyName = "wotlk-eoe";  // Eye Of Eternity
+            strategyName = "wotlk-eoe";     // Eye Of Eternity
             break;
         case 619:
-            strategyName = "wotlk-ok";  // Ahn'kahet: The Old Kingdom
+            strategyName = "wotlk-ok";      // Ahn'kahet: The Old Kingdom
             break;
         case 631:
             strategyName = "icc";
             break;
         case 632:
-            strategyName = "wotlk-fos";  // The Forge of Souls
+            strategyName = "wotlk-fos";     // The Forge of Souls
             break;
         case 650:
-            strategyName = "wotlk-toc";  // Trial of the Champion
+            strategyName = "wotlk-toc";     // Trial of the Champion
             break;
         case 658:
-            strategyName = "wotlk-pos";  // Pit of Saron
+            strategyName = "wotlk-pos";     // Pit of Saron
             break;
         case 668:
-            strategyName = "wotlk-hor";  // Halls of Reflection
+            strategyName = "wotlk-hor";     // Halls of Reflection
             break;
         default:
             break;
@@ -4900,7 +4950,7 @@ static const uint32 uPriorizedWeightStoneIds[7] = {ADAMANTITE_WEIGHTSTONE_DISPLA
  * FindStoneFor()
  * return Item* Returns sharpening/weight stone item eligible to enchant a bot weapon
  *
- * params:weapon Item* the weap�n the function should search and return a enchanting item for
+ * params:weapon Item* the weap锟絥 the function should search and return a enchanting item for
  * return nullptr if no relevant item is found in bot inventory, else return a sharpening or weight
  * stone based on the weapon subclass
  *
@@ -5346,9 +5396,12 @@ bool PlayerbotAI::CanMove()
     return bot->GetMotionMaster()->GetCurrentMovementGeneratorType() != FLIGHT_MOTION_TYPE;
 }
 
-bool PlayerbotAI::IsRealGuild(uint32 guildId)
+bool PlayerbotAI::IsInRealGuild()
 {
-    Guild* guild = sGuildMgr->GetGuildById(guildId);
+    if (!bot->GetGuildId())
+        return false;
+
+    Guild* guild = sGuildMgr->GetGuildById(bot->GetGuildId());
     if (!guild)
     {
         return false;
@@ -5358,14 +5411,6 @@ bool PlayerbotAI::IsRealGuild(uint32 guildId)
         return false;
 
     return !(sPlayerbotAIConfig->IsInRandomAccountList(leaderAccount));
-}
-
-bool PlayerbotAI::IsInRealGuild()
-{
-    if (!bot->GetGuildId())
-        return false;
-
-    return IsRealGuild(bot->GetGuildId());
 }
 
 void PlayerbotAI::QueueChatResponse(const ChatQueuedReply chatReply) { chatReplies.push_back(std::move(chatReply)); }
@@ -5397,7 +5442,7 @@ InventoryResult PlayerbotAI::CanEquipItem(uint8 slot, uint16& dest, Item* pItem,
         ItemTemplate const* pProto = pItem->GetTemplate();
         if (pProto)
         {
-            if (!sScriptMgr->CanEquipItem(bot, slot, dest, pItem, swap, not_loading))
+            if (!sScriptMgr->OnPlayerCanEquipItem(bot, slot, dest, pItem, swap, not_loading))
                 return EQUIP_ERR_CANT_DO_RIGHT_NOW;
 
             // item used

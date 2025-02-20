@@ -7,8 +7,8 @@
 
 #include "ArcaneMageStrategy.h"
 #include "FireMageStrategy.h"
-#include "FrostFireMageStrategy.h"
 #include "FrostMageStrategy.h"
+#include "FrostFireMageStrategy.h"
 #include "GenericMageNonCombatStrategy.h"
 #include "MageActions.h"
 #include "MageTriggers.h"
@@ -24,7 +24,7 @@ public:
         creators["nc"] = &MageStrategyFactoryInternal::nc;
         creators["pull"] = &MageStrategyFactoryInternal::pull;
         creators["fire aoe"] = &MageStrategyFactoryInternal::fire_aoe;
-        creators["frostfire aoe"] = &MageStrategyFactoryInternal::frostfire_aoe; 
+        creators["frostfire aoe"] = &MageStrategyFactoryInternal::frostfire_aoe;
         creators["frost aoe"] = &MageStrategyFactoryInternal::frost_aoe;
         creators["arcane aoe"] = &MageStrategyFactoryInternal::arcane_aoe;
         creators["cure"] = &MageStrategyFactoryInternal::cure;
@@ -37,8 +37,8 @@ private:
     static Strategy* nc(PlayerbotAI* botAI) { return new GenericMageNonCombatStrategy(botAI); }
     static Strategy* pull(PlayerbotAI* botAI) { return new PullStrategy(botAI, "shoot"); }
     static Strategy* fire_aoe(PlayerbotAI* botAI) { return new FireMageAoeStrategy(botAI); }
-    static Strategy* frostfire_aoe(PlayerbotAI* botAI) { return new FrostFireMageAoeStrategy(botAI); }
     static Strategy* frost_aoe(PlayerbotAI* botAI) { return new FrostMageAoeStrategy(botAI); }
+    static Strategy* frostfire_aoe(PlayerbotAI* botAI) { return new FrostFireMageAoeStrategy(botAI); }
     static Strategy* arcane_aoe(PlayerbotAI* botAI) { return new ArcaneMageAoeStrategy(botAI); }
     static Strategy* cure(PlayerbotAI* botAI) { return new MageCureStrategy(botAI); }
     static Strategy* buff(PlayerbotAI* botAI) { return new MageBuffStrategy(botAI); }

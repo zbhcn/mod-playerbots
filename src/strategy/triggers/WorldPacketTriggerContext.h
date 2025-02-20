@@ -32,7 +32,7 @@ public:
         creators["loot response"] = &WorldPacketTriggerContext::loot_response;
         creators["out of react range"] = &WorldPacketTriggerContext::out_of_react_range;
 
-        // quest
+        // quest 优化性能
         creators["complete quest"] = &WorldPacketTriggerContext::complete_quest;
         creators["accept quest"] = &WorldPacketTriggerContext::accept_quest;
         creators["confirm quest"] = &WorldPacketTriggerContext::quest_confirm_accept;
@@ -43,7 +43,6 @@ public:
         creators["quest update failed timer"] = &WorldPacketTriggerContext::quest_update_failed_timer;
         creators["quest update complete"] = &WorldPacketTriggerContext::quest_update_complete;
         creators["questgiver quest details"] = &WorldPacketTriggerContext::questgiver_quest_details;
-
 
         creators["item push result"] = &WorldPacketTriggerContext::item_push_result;
         creators["party command"] = &WorldPacketTriggerContext::party_command;
@@ -93,7 +92,7 @@ private:
     static Trigger* party_command(PlayerbotAI* botAI) { return new WorldPacketTrigger(botAI, "party command"); }
     static Trigger* item_push_result(PlayerbotAI* botAI) { return new WorldPacketTrigger(botAI, "item push result"); }
 
-    // quest
+    // quest 优化性能
     static Trigger* quest_update_add_kill(PlayerbotAI* ai) { return new WorldPacketTrigger(ai, "quest update add kill"); }
     static Trigger* quest_update_add_item(PlayerbotAI* ai) { return new WorldPacketTrigger(ai, "quest update add item"); }
     static Trigger* quest_update_failed(PlayerbotAI* ai) { return new WorldPacketTrigger(ai, "quest update failed"); }

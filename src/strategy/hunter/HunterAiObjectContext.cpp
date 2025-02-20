@@ -154,6 +154,7 @@ public:
         creators["call pet"] = &HunterAiObjectContextInternal::call_pet;
         creators["black arrow"] = &HunterAiObjectContextInternal::black_arrow;
         creators["freezing trap"] = &HunterAiObjectContextInternal::freezing_trap;
+        creators["Frost Trap"] = &HunterAiObjectContextInternal::Frost_Trap;  // 冰霜陷阱
         creators["rapid fire"] = &HunterAiObjectContextInternal::rapid_fire;
         creators["boost"] = &HunterAiObjectContextInternal::rapid_fire;
         creators["deterrence"] = &HunterAiObjectContextInternal::deterrence;
@@ -170,6 +171,7 @@ public:
         creators["wing clip"] = &HunterAiObjectContextInternal::wing_clip;
         creators["raptor strike"] = &HunterAiObjectContextInternal::raptor_strike;
         creators["mongoose bite"] = &HunterAiObjectContextInternal::mongoose_bite;
+        //creators["disengage"] = &HunterAiObjectContextInternal::disengage;//逃脱
         creators["feed pet"] = &HunterAiObjectContextInternal::feed_pet;
         creators["bestial wrath"] = &HunterAiObjectContextInternal::bestial_wrath;
         creators["scare beast"] = &HunterAiObjectContextInternal::scare_beast;
@@ -214,6 +216,7 @@ private:
     static Action* call_pet(PlayerbotAI* botAI) { return new CastCallPetAction(botAI); }
     static Action* black_arrow(PlayerbotAI* botAI) { return new CastBlackArrow(botAI); }
     static Action* freezing_trap(PlayerbotAI* botAI) { return new CastFreezingTrap(botAI); }
+    static Action* Frost_Trap(PlayerbotAI* botAI) { return new CastFrostTrap(botAI); }
     static Action* rapid_fire(PlayerbotAI* botAI) { return new CastRapidFireAction(botAI); }
     static Action* deterrence(PlayerbotAI* botAI) { return new CastDeterrenceAction(botAI); }
     static Action* readiness(PlayerbotAI* botAI) { return new CastReadinessAction(botAI); }
@@ -226,6 +229,7 @@ private:
     static Action* wing_clip(PlayerbotAI* botAI) { return new CastWingClipAction(botAI); }
     static Action* raptor_strike(PlayerbotAI* botAI) { return new CastRaptorStrikeAction(botAI); }
     static Action* mongoose_bite(PlayerbotAI* botAI) { return new CastMongooseBiteAction(botAI); }
+    //static Action* disengage(PlayerbotAI* botAI) { return new CastdisengageAction(botAI); }
     static Action* aspect_of_the_dragonhawk(PlayerbotAI* ai) { return new CastAspectOfTheDragonhawkAction(ai); }
     static Action* tranquilizing_shot(PlayerbotAI* ai) { return new CastTranquilizingShotAction(ai); }
     static Action* steady_shot(PlayerbotAI* ai) { return new CastSteadyShotAction(ai); }
@@ -235,6 +239,7 @@ private:
     static Action* disengage(PlayerbotAI* ai) { return new CastDisengageAction(ai); }
     static Action* immolation_trap(PlayerbotAI* ai) { return new CastImmolationTrapAction(ai); }
     static Action* explosive_trap(PlayerbotAI* ai) { return new CastExplosiveTrapAction(ai); }
+    
 };
 
 HunterAiObjectContext::HunterAiObjectContext(PlayerbotAI* botAI) : AiObjectContext(botAI)

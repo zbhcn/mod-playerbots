@@ -40,13 +40,21 @@ bool DrinkAction::Execute(Event event)
         float delay;
 
         if (!bot->InBattleground())
-            delay = 27000.0f * (100 - p) / 100.0f;
+            delay = 20000.0f * (100 - p) / 100.0f;//缩短喝水时间
         else
-            delay = 20000.0f * (100 - p) / 100.0f;
+            delay = 15000.0f * (100 - p) / 100.0f;
 
         botAI->SetNextCheckDelay(delay);
 
-        bot->AddAura(24707, bot);
+        //bot->AddAura(24707, bot);
+        bot->AddAura(25990, bot);
+        if (bot->GetGroup())
+        {
+            if (botAI->IsHeal(bot))
+                botAI->SayToParty("别开,治疗没蓝!!!");
+            else
+                botAI->SayToParty("别开,我在恢复!");
+        }
         return true;
         // return botAI->CastSpell(24707, bot);
     }
@@ -54,7 +62,8 @@ bool DrinkAction::Execute(Event event)
     return UseItemAction::Execute(event);
 }
 
-bool DrinkAction::isUseful() { return UseItemAction::isUseful() && AI_VALUE2(uint8, "mana", "self target") < 85; }
+bool DrinkAction::isUseful() { return UseItemAction::isUseful() && AI_VALUE2(uint8, "mana", "self target") < 20; }
+//调整坐地板
 
 bool DrinkAction::isPossible()
 {
@@ -90,21 +99,21 @@ bool EatAction::Execute(Event event)
         float delay;
 
         if (!bot->InBattleground())
-            delay = 27000.0f * (100 - p) / 100.0f;
+            delay = 20000.0f * (100 - p) / 100.0f;//缩短喝水时间
         else
-            delay = 20000.0f * (100 - p) / 100.0f;
+            delay = 15000.0f * (100 - p) / 100.0f;
 
         botAI->SetNextCheckDelay(delay);
 
-        bot->AddAura(24707, bot);
+        bot->AddAura(25990, bot);
         return true;
     }
 
     return UseItemAction::Execute(event);
 }
 
-bool EatAction::isUseful() { return UseItemAction::isUseful() && AI_VALUE2(uint8, "health", "self target") < 85; }
-
+bool EatAction::isUseful() { return UseItemAction::isUseful() && AI_VALUE2(uint8, "health", "self target") < 50; }
+// 调整坐地板
 bool EatAction::isPossible()
 {
     return !bot->IsInCombat() && (sPlayerbotAIConfig->freeFood || UseItemAction::isPossible());

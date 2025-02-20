@@ -5,11 +5,11 @@
 
 #include "MageActions.h"
 #include <cmath>
-
 #include "PlayerbotAIConfig.h"
 #include "Playerbots.h"
 #include "ServerFacade.h"
 #include "SharedDefines.h"
+
 
 Value<Unit*>* CastPolymorphAction::GetTargetValue() { return context->GetValue<Unit*>("cc target", getName()); }
 
@@ -18,10 +18,8 @@ bool CastFrostNovaAction::isUseful()
     Unit* target = AI_VALUE(Unit*, "current target");
     if (target && target->ToCreature() && target->ToCreature()->HasMechanicTemplateImmunity(1 << (MECHANIC_FREEZE - 1)))
         return false;
-
     if (target->isFrozen())
         return false;
-    
     return sServerFacade->IsDistanceLessOrEqualThan(AI_VALUE2(float, "distance", GetTargetName()), 10.f);
 }
 

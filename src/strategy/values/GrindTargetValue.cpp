@@ -116,8 +116,8 @@ Unit* GrindTargetValue::FindTargetForGrinding(uint32 assistCount)
             if (CreatureTemplate const* CreatureTemplate = creature->GetCreatureTemplate())
                 if (CreatureTemplate->rank > CREATURE_ELITE_NORMAL && !AI_VALUE(bool, "can fight elite"))
                     continue;
-
-        if (!bot->IsWithinLOSInMap(unit))
+        //禁用视野检查
+        if (!bot->IsWithinLOSInMap(unit) && !bot->InArena())
         {
             continue;
         }

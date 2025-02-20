@@ -14,6 +14,8 @@ public:
     {
         // creators["summon voidwalker"] = &summon_voidwalker;
         creators["banish"] = &banish;
+        creators["fear"] = &fear;
+        creators["howl of terror"] = &howl_of_terror;
     }
 
 private:
@@ -29,6 +31,20 @@ private:
         return new ActionNode("banish",
                               /*P*/ nullptr,
                               /*A*/ NextAction::array(0, new NextAction("fear"), nullptr),
+                              /*C*/ nullptr);
+    }
+    static ActionNode* fear([[maybe_unused]] PlayerbotAI* botAI)
+    {
+        return new ActionNode("fear",
+                              /*P*/ nullptr,
+                              /*A*/ nullptr,
+                              /*C*/ nullptr);
+    }
+    static ActionNode* howl_of_terror([[maybe_unused]] PlayerbotAI* botAI)
+    {
+        return new ActionNode("howl of terror",
+                              /*P*/ nullptr,
+                              /*A*/ nullptr,
                               /*C*/ nullptr);
     }
 };
@@ -51,9 +67,11 @@ void GenericWarlockStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         new TriggerNode("low mana", NextAction::array(0, new NextAction("life tap", ACTION_EMERGENCY + 5), nullptr)));
     triggers.push_back(
         new TriggerNode("target critical health", NextAction::array(0, new NextAction("drain soul", 30.0f), nullptr)));
-    // triggers.push_back(new TriggerNode("immolate", NextAction::array(0, new NextAction("immolate", 13.0f), new
-    // NextAction("conflagrate", 13.0f), nullptr))); triggers.push_back(new TriggerNode("enemy too close for spell",
-    // NextAction::array(0, new NextAction("flee", 49.0f), NULL)));
+     triggers.push_back(new TriggerNode("immolate", NextAction::array(0, new NextAction("immolate", 13.0f), new
+     NextAction("conflagrate", 13.0f), nullptr)));
+     triggers.push_back(new TriggerNode("enemy too close for auto shot", NextAction::array(0, new NextAction("fear", 15.0f), nullptr)));//SS敌人靠近恐惧
+     triggers.push_back(
+         new TriggerNode("enemy too close for spell", NextAction::array(0, new NextAction("howl of terror", 49.0f), nullptr)));
 }
 
 void WarlockBoostStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)

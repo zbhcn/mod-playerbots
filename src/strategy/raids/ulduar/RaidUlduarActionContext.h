@@ -24,7 +24,6 @@ public:
         creators["razorscale grounded"] = &RaidUlduarActionContext::razorscale_grounded;
         creators["razorscale harpoon action"] = &RaidUlduarActionContext::razorscale_harpoon_action;
         creators["razorscale fuse armor action"] = &RaidUlduarActionContext::razorscale_fuse_armor_action;
-        creators["hodir move snowpacked icicle"] = &RaidUlduarActionContext::hodir_move_snowpacked_icicle;
     }
 
 private:
@@ -37,7 +36,6 @@ private:
     static Action* razorscale_grounded(PlayerbotAI* ai) { return new RazorscaleGroundedAction(ai); }
     static Action* razorscale_harpoon_action(PlayerbotAI* ai) { return new RazorscaleHarpoonAction(ai); }
     static Action* razorscale_fuse_armor_action(PlayerbotAI* ai) { return new RazorscaleFuseArmorAction(ai); }
-    static Action* hodir_move_snowpacked_icicle(PlayerbotAI* ai) { return new HodirMoveSnowpackedIcicleAction(ai); }
 };
 
 #endif

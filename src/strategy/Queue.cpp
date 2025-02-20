@@ -4,6 +4,7 @@
  */
 
 #include "Queue.h"
+
 #include "AiObjectContext.h"
 #include "Log.h"
 #include "PlayerbotAIConfig.h"
@@ -38,15 +39,21 @@ ActionNode* Queue::Pop()
     return extractAndDeleteBasket(highestRelevanceBasket);
 }
 
-ActionBasket* Queue::Peek()
-{
-    return findHighestRelevanceBasket();
-}
+ActionBasket* Queue::Peek() { return findHighestRelevanceBasket(); }
 
-uint32 Queue::Size()
-{
-    return actions.size();
-}
+uint32 Queue::Size() { return actions.size(); }
+
+//void Queue::RemoveExpired()
+//{
+//    if (!sPlayerbotAIConfig->expireActionTime)
+//    {
+//        return;
+//    }
+//
+//    std::list<ActionBasket*> expiredBaskets;
+//    collectExpiredBaskets(expiredBaskets);
+//    removeAndDeleteBaskets(expiredBaskets);
+//}
 
 // Private helper methods
 void Queue::updateExistingBasket(ActionBasket* existing, ActionBasket* newBasket)
@@ -93,3 +100,30 @@ ActionNode* Queue::extractAndDeleteBasket(ActionBasket* basket)
     delete basket;
     return action;
 }
+
+//void Queue::collectExpiredBaskets(std::list<ActionBasket*>& expiredBaskets)
+//{
+//    uint32 expiryTime = sPlayerbotAIConfig->expireActionTime;
+//    for (ActionBasket* basket : actions)
+//    {
+//        if (basket->isExpired(expiryTime))
+//        {
+//            expiredBaskets.push_back(basket);
+//        }
+//    }
+//}
+//
+//void Queue::removeAndDeleteBaskets(std::list<ActionBasket*>& basketsToRemove)
+//{
+//    for (ActionBasket* basket : basketsToRemove)
+//    {
+//        actions.remove(basket);
+//
+//        if (ActionNode* action = basket->getAction())
+//        {
+//            delete action;
+//        }
+//
+//        delete basket;
+//    }
+//}

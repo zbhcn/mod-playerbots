@@ -97,6 +97,7 @@ DEBUFF_CHECKISOWNER_ACTION(CastPowerWordPainAction, "shadow word: pain");
 DEBUFF_ENEMY_ACTION(CastPowerWordPainOnAttackerAction, "shadow word: pain");
 SPELL_ACTION(CastMindBlastAction, "mind blast");
 SPELL_ACTION(CastPsychicScreamAction, "psychic scream");
+SPELL_ACTION(CastPsychicHorrorAction, "psychic horror");
 DEBUFF_ACTION(CastMindSootheAction, "mind soothe");
 BUFF_ACTION_U(CastFadeAction, "fade", bot->GetGroup());
 BUFF_ACTION(CastShadowProtectionAction, "shadow protection");

@@ -14,7 +14,7 @@ public:
         // Unholy
         // creators["bone shield"] = &bone_shield;
         // creators["plague strike"] = &plague_strike;
-        // creators["death grip"] = &death_grip;
+        //creators["death grip"] = &death_grip;
         // creators["death coil"] = &death_coil;
         creators["death strike"] = &death_strike;
         // creators["unholy blight"] = &unholy_blight;

@@ -15,6 +15,7 @@ void DeadStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         new TriggerNode("often", NextAction::array(0, new NextAction("auto release", relevance), nullptr)));
     triggers.push_back(
         new TriggerNode("bg active", NextAction::array(0, new NextAction("auto release", relevance), nullptr)));
+    //优化性能
     triggers.push_back(
         new TriggerNode("dead", NextAction::array(0, new NextAction("find corpse", relevance), nullptr)));
     triggers.push_back(new TriggerNode(

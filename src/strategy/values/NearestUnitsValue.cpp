@@ -15,7 +15,8 @@ GuidVector NearestUnitsValue::Calculate()
     GuidVector results;
     for (Unit* unit : targets)
     {
-        if (AcceptUnit(unit) && (ignoreLos || bot->IsWithinLOSInMap(unit)))
+        //禁用视野检查
+        if (AcceptUnit(unit) && (ignoreLos || bot->IsWithinLOSInMap(unit) || bot->InArena()))
             results.push_back(unit->GetGUID());
     }
 

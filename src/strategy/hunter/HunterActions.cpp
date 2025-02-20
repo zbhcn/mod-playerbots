@@ -56,12 +56,7 @@ bool CastDisengageAction::Execute(Event event)
     bot->SetOrientation(bot->GetAngle(target));
     return CastSpellAction::Execute(event);
 }
-
-bool CastDisengageAction::isUseful()
-{
-    return !botAI->HasStrategy("trap weave", BOT_STATE_COMBAT);
-}
-
+bool CastDisengageAction::isUseful() { return !botAI->HasStrategy("trap weave", BOT_STATE_COMBAT); }
 
 Value<Unit*>* CastScareBeastCcAction::GetTargetValue() { return context->GetValue<Unit*>("cc target", "scare beast"); }
 

@@ -78,7 +78,7 @@ bool LeaveGroupAction::Leave(Player* player)
 
     bool aiMaster = GET_PLAYERBOT_AI(botAI->GetMaster()) != nullptr;
 
-    botAI->TellMaster("Goodbye!", PLAYERBOT_SECURITY_TALK);
+    botAI->TellMaster("再见!", PLAYERBOT_SECURITY_TALK);
 
     bool randomBot = sRandomPlayerbotMgr->IsRandomBot(bot);
     bool shouldStay = randomBot && bot->GetGroup() && player == bot;
@@ -108,6 +108,9 @@ bool LeaveFarAwayAction::Execute(Event event)
 
 bool LeaveFarAwayAction::isUseful()
 {
+    if (bot->IsUsingLfg())
+        return false;
+
     if (bot->InBattleground())
         return false;
 

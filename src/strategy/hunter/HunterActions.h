@@ -88,22 +88,19 @@ END_SPELL_ACTION()
 class CastDisengageAction : public CastSpellAction
 {
 public:
-    CastDisengageAction(PlayerbotAI* botAI): CastSpellAction(botAI, "disengage") {}
-
+    CastDisengageAction(PlayerbotAI* botAI) : CastSpellAction(botAI, "disengage") {}
     bool Execute(Event event) override;
     bool isUseful() override;
 };
-
 class CastImmolationTrapAction : public CastSpellAction
 {
 public:
-    CastImmolationTrapAction(PlayerbotAI* botAI): CastSpellAction(botAI, "immolation trap") {}
+    CastImmolationTrapAction(PlayerbotAI* botAI) : CastSpellAction(botAI, "immolation trap") {}
 };
-
 class CastExplosiveTrapAction : public CastSpellAction
 {
 public:
-    CastExplosiveTrapAction(PlayerbotAI* botAI): CastSpellAction(botAI, "explosive trap") {}
+    CastExplosiveTrapAction(PlayerbotAI* botAI) : CastSpellAction(botAI, "explosive trap") {}
 };
 
 class CastAspectOfTheHawkAction : public CastBuffSpellAction
@@ -222,6 +219,12 @@ public:
     Value<Unit*>* GetTargetValue() override;
 };
 
+class CastFrostTrap : public CastSpellAction
+{
+public:
+    CastFrostTrap(PlayerbotAI* botAI) : CastSpellAction(botAI, "Frost Trap") {}
+};
+
 class CastWingClipAction : public CastSpellAction
 {
 public:
@@ -242,6 +245,12 @@ class CastMongooseBiteAction : public CastSpellAction
 public:
     CastMongooseBiteAction(PlayerbotAI* botAI) : CastSpellAction(botAI, "mongoose bite") {}
 };
+
+//class CastdisengageAction : public CastSpellAction
+//{
+//public:
+//    CastdisengageAction(PlayerbotAI* botAI) : CastSpellAction(botAI, "disengage") {}//逃脱
+//};
 
 class CastSerpentStingOnAttackerAction : public CastDebuffSpellOnAttackerAction
 {

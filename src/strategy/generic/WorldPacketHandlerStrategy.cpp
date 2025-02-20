@@ -61,6 +61,7 @@ void WorldPacketHandlerStrategy::InitTriggers(std::vector<TriggerNode*>& trigger
 
     // quest ?
     //triggers.push_back(new TriggerNode("quest confirm", NextAction::array(0, new NextAction("quest confirm", relevance), nullptr)));
+    //优化性能
     triggers.push_back(new TriggerNode("questgiver quest details", NextAction::array(0, new NextAction("turn in query quest", relevance), nullptr)));
 }
 
@@ -77,7 +78,7 @@ WorldPacketHandlerStrategy::WorldPacketHandlerStrategy(PlayerbotAI* botAI) : Pas
     supported.push_back("inventory change failure");
     supported.push_back("bg status");
 
-    // quests
+    // quests优化性能
     supported.push_back("quest update add kill");
     supported.push_back("quest update add item");
     supported.push_back("quest update failed");

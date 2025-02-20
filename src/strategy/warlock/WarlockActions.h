@@ -220,6 +220,12 @@ public:
     CastFearAction(PlayerbotAI* botAI) : CastDebuffSpellAction(botAI, "fear") {}
 };
 
+class CastHowlOfTerror : public CastDebuffSpellAction
+{
+public:
+    CastHowlOfTerror(PlayerbotAI* botAI) : CastDebuffSpellAction(botAI, "howl of terror") {}
+};
+
 class CastFearOnCcAction : public CastBuffSpellAction
 {
 public:

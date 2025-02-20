@@ -313,7 +313,7 @@ class CastBlinkBackAction : public CastSpellAction
 {
 public:
     CastBlinkBackAction(PlayerbotAI* botAI) : CastSpellAction(botAI, "blink") {}
-    
+
     bool Execute(Event event) override;
 };
 #endif

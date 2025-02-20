@@ -18,7 +18,6 @@ bool BlackArrowTrigger::IsActive()
 {
     if (botAI->HasStrategy("trap weave", BOT_STATE_COMBAT))
         return false;
-
     return DebuffTrigger::IsActive();
 }
 

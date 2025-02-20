@@ -84,10 +84,37 @@ Engine::~Engine(void)
     strategies.clear();
 }
 
+//void Engine::Reset()
+//{
+//    strategyTypeMask = 0;
+//    ActionNode* action = nullptr;
+//    do
+//    {
+//        action = queue.Pop();
+//        if (!action)
+//            break;
+//
+//        delete action;
+//    } while (true);
+//
+//    for (std::vector<TriggerNode*>::iterator i = triggers.begin(); i != triggers.end(); i++)
+//    {
+//        TriggerNode* trigger = *i;
+//        delete trigger;
+//    }
+//
+//    triggers.clear();
+//
+//    for (std::vector<Multiplier*>::iterator i = multipliers.begin(); i != multipliers.end(); i++)
+//    {
+//        Multiplier* multiplier = *i;
+//        delete multiplier;
+//    }
+
 void Engine::Reset()
 {
     strategyTypeMask = 0;
-    
+
     ActionNode* action = nullptr;
 
     while ((action = queue.Pop()) != nullptr)
@@ -106,7 +133,6 @@ void Engine::Reset()
     {
         delete multiplier;
     }
-
     multipliers.clear();
 }
 
@@ -136,7 +162,7 @@ void Engine::Init()
 bool Engine::DoNextAction(Unit* unit, uint32 depth, bool minimal)
 {
     LogAction("--- AI Tick ---");
-
+     
     if (sPlayerbotAIConfig->logValuesPerTick)
         LogValues();
 
@@ -240,13 +266,13 @@ bool Engine::DoNextAction(Unit* unit, uint32 depth, bool minimal)
 
     if (!actionExecuted)
         LogAction("No actions executed");
-    
+
     ActionNode* action = nullptr;
     while ((action = queue.Pop()) != nullptr)
     {
         delete action;
     }
-
+    //queue.RemoveExpired();  // Clean up expired actions in the queue
     return actionExecuted;
 }
 

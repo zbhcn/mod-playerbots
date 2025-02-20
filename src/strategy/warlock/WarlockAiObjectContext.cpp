@@ -174,6 +174,7 @@ public:
         creators["shadowfury"] = &WarlockAiObjectContextInternal::shadowfury;
         creators["life tap"] = &WarlockAiObjectContextInternal::life_tap;
         creators["fear"] = &WarlockAiObjectContextInternal::fear;
+        creators["howl of terror"] = &WarlockAiObjectContextInternal::howl_of_terror;
         creators["fear on cc"] = &WarlockAiObjectContextInternal::fear_on_cc;
         creators["incinirate"] = &WarlockAiObjectContextInternal::incinirate;
         creators["conflagrate"] = &WarlockAiObjectContextInternal::conflagrate;
@@ -196,6 +197,7 @@ private:
     static Action* incinirate(PlayerbotAI* botAI) { return new CastIncinirateAction(botAI); }
     static Action* fear_on_cc(PlayerbotAI* botAI) { return new CastFearOnCcAction(botAI); }
     static Action* fear(PlayerbotAI* botAI) { return new CastFearAction(botAI); }
+    static Action* howl_of_terror(PlayerbotAI* botAI) { return new CastHowlOfTerror(botAI); }
     static Action* immolate(PlayerbotAI* botAI) { return new CastImmolateAction(botAI); }
     static Action* summon_imp(PlayerbotAI* botAI) { return new CastSummonImpAction(botAI); }
     static Action* summon_succubus(PlayerbotAI* botAI) { return new CastSummonSuccubusAction(botAI); }

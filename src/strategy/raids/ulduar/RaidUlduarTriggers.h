@@ -82,12 +82,4 @@ public:
     HodirBitingColdTrigger(PlayerbotAI* ai) : Trigger(ai, "hodir biting cold") {}
     bool IsActive() override;
 };
-
-class HodirNearSnowpackedIcicleTrigger : public Trigger
-{
-public:
-    HodirNearSnowpackedIcicleTrigger(PlayerbotAI* ai) : Trigger(ai, "hodir near snowpacked icicle") {}
-    bool IsActive() override;
-};
-
 #endif

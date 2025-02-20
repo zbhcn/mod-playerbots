@@ -5,6 +5,7 @@
 
 #include "ReleaseSpiritAction.h"
 
+#include "Corpse.h"
 #include "Event.h"
 #include "GameGraveyard.h"
 #include "NearestNpcsValue.h"
@@ -12,7 +13,6 @@
 #include "ObjectGuid.h"
 #include "Playerbots.h"
 #include "ServerFacade.h"
-#include "Corpse.h"
 
 // ReleaseSpiritAction implementation
 bool ReleaseSpiritAction::Execute(Event event)
@@ -31,9 +31,8 @@ bool ReleaseSpiritAction::Execute(Event event)
     }
 
     const WorldPacket& packet = event.getPacket();
-    const std::string message = !packet.empty() && packet.GetOpcode() == CMSG_REPOP_REQUEST 
-                                ? "Releasing..." 
-                                : "Meet me at the graveyard";
+    const std::string message =
+        !packet.empty() && packet.GetOpcode() == CMSG_REPOP_REQUEST ? "Releasing..." : "Meet me at the graveyard";
     botAI->TellMasterNoFacing(message);
 
     IncrementDeathCount();
@@ -61,12 +60,8 @@ void ReleaseSpiritAction::LogRelease(const std::string& releaseMsg, bool isAutoR
 {
     const std::string teamPrefix = bot->GetTeamId() == TEAM_ALLIANCE ? "A" : "H";
 
-    LOG_DEBUG("playerbots", "Bot {} {}:{} <{}> {}",
-        bot->GetGUID().ToString().c_str(),
-        teamPrefix,
-        bot->GetLevel(),
-        bot->GetName().c_str(),
-        releaseMsg.c_str());
+    LOG_DEBUG("playerbots", "Bot {} {}:{} <{}> {}", bot->GetGUID().ToString().c_str(), teamPrefix, bot->GetLevel(),
+              bot->GetName().c_str(), releaseMsg.c_str());
 }
 
 // AutoReleaseSpiritAction implementation
@@ -80,7 +75,7 @@ bool AutoReleaseSpiritAction::Execute(Event event)
     bot->GetSession()->HandleRepopRequestOpcode(packet);
 
     LogRelease("releases spirit", true);
-    
+
     if (bot->InBattleground())
     {
         return HandleBattlegroundSpiritHealer();
@@ -108,9 +103,8 @@ bool AutoReleaseSpiritAction::HandleBattlegroundSpiritHealer()
 {
     constexpr uint32_t RESURRECT_DELAY = 15;
     const time_t now = time(nullptr);
-    
-    if ((now - m_bgGossipTime < RESURRECT_DELAY) && 
-        bot->HasAura(SPELL_WAITING_FOR_RESURRECT))
+
+    if ((now - m_bgGossipTime < RESURRECT_DELAY) && bot->HasAura(SPELL_WAITING_FOR_RESURRECT))
     {
         return false;
     }
@@ -138,7 +132,8 @@ bool AutoReleaseSpiritAction::HandleBattlegroundSpiritHealer()
         // and in IOC it's not within clicking range when they res in own base
 
         // Teleport to nearest friendly Spirit Healer when not currently in range of one.
-        bot->TeleportTo(bot->GetMapId(), spiritHealer->GetPositionX(), spiritHealer->GetPositionY(), spiritHealer->GetPositionZ(), 0.f);
+        bot->TeleportTo(bot->GetMapId(), spiritHealer->GetPositionX(), spiritHealer->GetPositionY(),
+                        spiritHealer->GetPositionZ(), 0.f);
         RESET_AI_VALUE(bool, "combat::self target");
         RESET_AI_VALUE(WorldPosition, "current position");
     }
@@ -165,17 +160,14 @@ bool AutoReleaseSpiritAction::ShouldAutoRelease() const
     if (!botAI->HasActivePlayerMaster())
         return true;
 
-    if (botAI->HasActivePlayerMaster() && 
-        groupMaster->GetMapId() == bot->GetMapId() &&
-        bot->GetMap() && 
+    if (botAI->HasActivePlayerMaster() && groupMaster->GetMapId() == bot->GetMapId() && bot->GetMap() &&
         (bot->GetMap()->IsRaid() || bot->GetMap()->IsDungeon()))
     {
         return false;
     }
 
-    return sServerFacade->IsDistanceGreaterThan(
-        AI_VALUE2(float, "distance", "master target"),
-        sPlayerbotAIConfig->sightDistance);
+    return sServerFacade->IsDistanceGreaterThan(AI_VALUE2(float, "distance", "master target"),
+                                                sPlayerbotAIConfig->sightDistance);
 }
 
 bool AutoReleaseSpiritAction::ShouldDelayBattlegroundRelease() const
@@ -208,10 +200,8 @@ bool AutoReleaseSpiritAction::ShouldDelayBattlegroundRelease() const
 
 bool RepopAction::Execute(Event event)
 {
-    const GraveyardStruct* graveyard = GetGrave(
-        AI_VALUE(uint32, "death count") > 10 || 
-        CalculateDeadTime() > 30 * MINUTE
-    );
+    const GraveyardStruct* graveyard =
+        GetGrave(AI_VALUE(uint32, "death count") > 10 || CalculateDeadTime() > 30 * MINUTE);
 
     if (!graveyard)
         return false;
@@ -220,16 +210,13 @@ bool RepopAction::Execute(Event event)
     return true;
 }
 
-bool RepopAction::isUseful()
-{
-    return !bot->InBattleground();
-}
+bool RepopAction::isUseful() { return !bot->InBattleground(); }
 
 int64 RepopAction::CalculateDeadTime() const
 {
     if (Corpse* corpse = bot->GetCorpse())
         return time(nullptr) - corpse->GetGhostTime();
-    
+
     return bot->isDead() ? 0 : 60 * MINUTE;
 }
 

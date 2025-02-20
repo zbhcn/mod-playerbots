@@ -27,7 +27,8 @@ bool AcceptInvitationAction::Execute(Event event)
     if (!inviter)
         return false;
 
-    if (!botAI->GetSecurity()->CheckLevelFor(PLAYERBOT_SECURITY_INVITE, false, inviter))
+    if (!botAI->GetSecurity()->CheckLevelFor(PLAYERBOT_SECURITY_INVITE, false, inviter) ||
+        !bot->HasHealSpec())  // && !bot->HasHealSpec())//允许奶妈组队
     {
         WorldPacket data(SMSG_GROUP_DECLINE, 10);
         data << bot->GetName();
@@ -50,7 +51,7 @@ bool AcceptInvitationAction::Execute(Event event)
     botAI->ChangeStrategy("+follow,-lfg,-bg", BOT_STATE_NON_COMBAT);
     botAI->Reset();
 
-    botAI->TellMaster("Hello");
+    botAI->TellMaster("你好,请多关照");
 
     if (sPlayerbotAIConfig->summonWhenGroup && bot->GetDistance(inviter) > sPlayerbotAIConfig->sightDistance)
     {

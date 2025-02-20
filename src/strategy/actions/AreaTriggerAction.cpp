@@ -36,7 +36,7 @@ bool ReachAreaTriggerAction::Execute(Event event)
 
     if (bot->GetMapId() != at->map)
     {
-        botAI->TellError("I won't follow: too far away");
+        botAI->TellError("我不跟着你了，太远了");
         return true;
     }
 
@@ -44,7 +44,12 @@ bool ReachAreaTriggerAction::Execute(Event event)
 
     float distance = bot->GetDistance(at->x, at->y, at->z);
     float delay = 1000.0f * distance / bot->GetSpeed(MOVE_RUN) + sPlayerbotAIConfig->reactDelay;
-    botAI->TellError("Wait for me");
+    botAI->TellError("等我,有点远");//传送到主人
+    if (botAI->HasRealPlayerMaster() && botAI->GetMaster() &&
+        !bot->IsBeingTeleported() && !botAI->GetMaster()->IsBeingTeleported() &&
+        bot->GetGroup() && !bot->inRandomLfgDungeon())// 随机本不出来
+            bot->TeleportTo(botAI->GetMaster()->GetMapId(), botAI->GetMaster()->GetPositionX(),
+                        botAI->GetMaster()->GetPositionY(), botAI->GetMaster()->GetPositionZ(), 0);
     botAI->SetNextCheckDelay(delay);
     context->GetValue<LastMovement&>("last area trigger")->Get().lastAreaTrigger = triggerId;
 
@@ -69,6 +74,6 @@ bool AreaTriggerAction::Execute(Event event)
     p.rpos(0);
     bot->GetSession()->HandleAreaTriggerOpcode(p);
 
-    botAI->TellMaster("Hello");
+    botAI->TellMaster("你好,我赶来了,你跑得太快了!");
     return true;
 }

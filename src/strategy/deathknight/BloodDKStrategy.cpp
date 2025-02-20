@@ -17,7 +17,7 @@ public:
         creators["rune strike"] = &rune_strike;
         creators["heart strike"] = &heart_strike;
         creators["death strike"] = &death_strike;
-        // creators["death grip"] = &death_grip;
+        creators["death grip"] = &death_grip;
         // creators["plague strike"] = &plague_strike;
         // creators["pestilence"] = &pestilence;
         creators["icy touch"] = &icy_touch;
@@ -40,6 +40,13 @@ private:
     {
         return new ActionNode("rune strike",
                               /*P*/ NextAction::array(0, new NextAction("frost presence"), nullptr),
+                              /*A*/ nullptr,
+                              /*C*/ nullptr);
+    }
+    static ActionNode* death_grip([[maybe_unused]] PlayerbotAI* botAI)
+    {
+        return new ActionNode("death grip",
+                              /*P*/ NextAction::array(0, new NextAction("Death Strike"), nullptr),
                               /*A*/ nullptr,
                               /*C*/ nullptr);
     }

@@ -48,7 +48,7 @@ bool BGJoinAction::Execute(Event event)
             if (i != ratedList.end())
                 isRated = true;
 
-            if (isRated && !gatherArenaTeam(type))
+            if (isRated && !gatherArenaTeam(type)) //&& type != ARENA_TYPE_1v1 排除1V1竞技场条件筛选
                 return false;
 
             botAI->GetAiObjectContext()->GetValue<uint32>("arena type")->Set(isRated);
@@ -63,6 +63,140 @@ bool BGJoinAction::Execute(Event event)
     return JoinQueue(queueType);
 }
 
+//bool BGJoinAction::gatherArenaTeam(ArenaType type)
+//{
+//    ArenaTeam* arenateam = sArenaTeamMgr->GetArenaTeamByCaptain(bot->GetGUID(), type);
+//
+//    if (!arenateam)
+//        return false;
+//
+//    if (arenateam->GetMembersSize() < ((uint32)arenateam->GetType()))
+//        return false;
+//
+//    GuidVector members;
+//
+//    // search for arena team members and make them online
+//    for (ArenaTeam::MemberList::iterator itr = arenateam->GetMembers().begin(); itr != arenateam->GetMembers().end();
+//         ++itr)
+//    {
+//        bool offline = false;
+//        Player* member = ObjectAccessor::FindConnectedPlayer(itr->Guid);
+//        if (!member)
+//        {
+//            offline = true;
+//        }
+//        // if (!member && !sObjectMgr->GetPlayerAccountIdByGUID(itr->guid))
+//        //     continue;
+//
+//        if (offline)
+//            sRandomPlayerbotMgr->AddPlayerBot(itr->Guid, 0);
+//
+//        if (member)
+//        {
+//            PlayerbotAI* memberBotAI = GET_PLAYERBOT_AI(member);
+//            if (!memberBotAI)
+//                continue;
+//
+//            if (member->GetGroup() && memberBotAI->HasRealPlayerMaster())
+//                continue;
+//
+//            if (!sPlayerbotAIConfig->IsInRandomAccountList(member->GetSession()->GetAccountId()))
+//                continue;
+//
+//            if (member->IsInCombat())
+//                continue;
+//
+//            if (member->GetGUID() == bot->GetGUID())
+//                continue;
+//
+//            if (member->InBattleground())
+//                continue;
+//
+//            if (member->InBattlegroundQueue())
+//                continue;
+//
+//            if (member->GetGroup())
+//                member->GetGroup()->RemoveMember(member->GetGUID());
+//
+//            memberBotAI->Reset();
+//        }
+//
+//        if (member)
+//            members.push_back(member->GetGUID());
+//    }
+//
+//    if ((!members.size() || (int)members.size() < (int)(arenateam->GetType() - 1)) && type != ARENA_TYPE_1v1)
+//    {
+//        LOG_INFO("playerbots", "Team #{} <{}> has not enough members for match", arenateam->GetId(),
+//                 arenateam->GetName().c_str());
+//        return false;
+//    }
+//
+//    Group* group = new Group();
+//
+//    // disband leaders group
+//    if (bot->GetGroup())
+//        bot->GetGroup()->Disband(true);
+//
+//    if (!group->Create(bot))
+//    {
+//        LOG_INFO("playerbots", "Team #{} <{}>: Can't create group for arena queue", arenateam->GetId(),
+//                 arenateam->GetName());
+//        return false;
+//    }
+//    else
+//        sGroupMgr->AddGroup(group);
+//
+//    LOG_INFO("playerbots", "Bot {} <{}>: Leader of <{}>", bot->GetGUID().ToString().c_str(), bot->GetName(),
+//             arenateam->GetName());
+//
+//    for (auto i = begin(members); i != end(members); ++i)
+//    {
+//        if (*i == bot->GetGUID())
+//            continue;
+//
+//        // if (count >= (int)arenateam->GetType())
+//        // break;
+//
+//        if (group->GetMembersCount() >= (uint32)arenateam->GetType())
+//            break;
+//
+//        Player* member = ObjectAccessor::FindConnectedPlayer(*i);
+//        if (!member)
+//            continue;
+//
+//        if (member->GetLevel() < 70)
+//            continue;
+//
+//        if (!group->AddMember(member))
+//            continue;
+//
+//        PlayerbotAI* memberBotAI = GET_PLAYERBOT_AI(member);
+//        if (!memberBotAI)
+//            continue;
+//
+//        memberBotAI->Reset();
+//        member->TeleportTo(bot->GetMapId(), bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ(), 0);
+//
+//        LOG_INFO("playerbots", "Bot {} <{}>: Member of <{}>", member->GetGUID().ToString().c_str(),
+//                 member->GetName().c_str(), arenateam->GetName().c_str());
+//    }
+//
+//    if (group && group->GetMembersCount() >= (uint32)arenateam->GetType())
+//    {
+//        LOG_INFO("playerbots", "Team #{} <{}> Group is ready for match", arenateam->GetId(),
+//                 arenateam->GetName().c_str());
+//        return true;
+//    }
+//    else
+//    {
+//        LOG_INFO("playerbots", "Team #{} <{}> Group is not ready for match (not enough members)", arenateam->GetId(),
+//                 arenateam->GetName().c_str());
+//        group->Disband();
+//    }
+//
+//    return false;
+//}
 bool BGJoinAction::gatherArenaTeam(ArenaType type)
 {
     ArenaTeam* arenateam = sArenaTeamMgr->GetArenaTeamByCaptain(bot->GetGUID(), type);
@@ -70,71 +204,75 @@ bool BGJoinAction::gatherArenaTeam(ArenaType type)
     if (!arenateam)
         return false;
 
-    if (arenateam->GetMembersSize() < ((uint32)arenateam->GetType()))
+    // 对于其他类型的竞技场，检查是否有足够的成员
+    if (type != ARENA_TYPE_1v1 && arenateam->GetMembersSize() < ((uint32)arenateam->GetType()))
         return false;
 
     GuidVector members;
 
-    // search for arena team members and make them online
-    for (ArenaTeam::MemberList::iterator itr = arenateam->GetMembers().begin(); itr != arenateam->GetMembers().end();
-         ++itr)
+    // 如果是 1v1 竞技场，只需要找到一个合适的对手
+    if (type != ARENA_TYPE_1v1)
     {
-        bool offline = false;
-        Player* member = ObjectAccessor::FindConnectedPlayer(itr->Guid);
-        if (!member)
+        // 对于其他类型的竞技场，继续使用原有的成员收集逻辑
+        for (ArenaTeam::MemberList::iterator itr = arenateam->GetMembers().begin();
+             itr != arenateam->GetMembers().end(); ++itr)
         {
-            offline = true;
+            bool offline = false;
+            Player* member = ObjectAccessor::FindConnectedPlayer(itr->Guid);
+            if (!member)
+            {
+                offline = true;
+            }
+
+            if (offline)
+                sRandomPlayerbotMgr->AddPlayerBot(itr->Guid, 0);
+
+            if (member)
+            {
+                PlayerbotAI* memberBotAI = GET_PLAYERBOT_AI(member);
+                if (!memberBotAI)
+                    continue;
+
+                if (member->GetGroup() && memberBotAI->HasRealPlayerMaster())
+                    continue;
+
+                if (!sPlayerbotAIConfig->IsInRandomAccountList(member->GetSession()->GetAccountId()))
+                    continue;
+
+                if (member->IsInCombat())
+                    continue;
+
+                if (member->GetGUID() == bot->GetGUID())
+                    continue;
+
+                if (member->InBattleground())
+                    continue;
+
+                if (member->InBattlegroundQueue())
+                    continue;
+
+                if (member->GetGroup())
+                    member->GetGroup()->RemoveMember(member->GetGUID());
+
+                memberBotAI->Reset();
+            }
+
+            if (member)
+                members.push_back(member->GetGUID());
         }
-        // if (!member && !sObjectMgr->GetPlayerAccountIdByGUID(itr->guid))
-        //     continue;
 
-        if (offline)
-            sRandomPlayerbotMgr->AddPlayerBot(itr->Guid, 0);
-
-        if (member)
+        // 如果没有足够的成员，返回 false
+        if ((!members.size() || (int)members.size() < (int)(arenateam->GetType() - 1)) && type != ARENA_TYPE_1v1)
         {
-            PlayerbotAI* memberBotAI = GET_PLAYERBOT_AI(member);
-            if (!memberBotAI)
-                continue;
-
-            if (member->GetGroup() && memberBotAI->HasRealPlayerMaster())
-                continue;
-
-            if (!sPlayerbotAIConfig->IsInRandomAccountList(member->GetSession()->GetAccountId()))
-                continue;
-
-            if (member->IsInCombat())
-                continue;
-
-            if (member->GetGUID() == bot->GetGUID())
-                continue;
-
-            if (member->InBattleground())
-                continue;
-
-            if (member->InBattlegroundQueue())
-                continue;
-
-            if (member->GetGroup())
-                member->GetGroup()->RemoveMember(member->GetGUID());
-
-            memberBotAI->Reset();
+            LOG_INFO("playerbots", "Team #{} <{}> has not enough members for match", arenateam->GetId(),
+                     arenateam->GetName().c_str());
+            return false;
         }
-
-        if (member)
-            members.push_back(member->GetGUID());
-    }
-
-    if (!members.size() || (int)members.size() < (int)(arenateam->GetType() - 1))
-    {
-        LOG_INFO("playerbots", "Team #{} <{}> has not enough members for match", arenateam->GetId(),
-                 arenateam->GetName().c_str());
-        return false;
     }
 
     Group* group = new Group();
 
-    // disband leaders group
+    // 解散 leader 的组
     if (bot->GetGroup())
         bot->GetGroup()->Disband(true);
 
@@ -150,13 +288,12 @@ bool BGJoinAction::gatherArenaTeam(ArenaType type)
     LOG_INFO("playerbots", "Bot {} <{}>: Leader of <{}>", bot->GetGUID().ToString().c_str(), bot->GetName(),
              arenateam->GetName());
 
+    //bot->AddAura(62650, bot);              // 冰霜之韧
+    // 将成员加入组内
     for (auto i = begin(members); i != end(members); ++i)
     {
         if (*i == bot->GetGUID())
             continue;
-
-        // if (count >= (int)arenateam->GetType())
-        // break;
 
         if (group->GetMembersCount() >= (uint32)arenateam->GetType())
             break;
@@ -177,6 +314,8 @@ bool BGJoinAction::gatherArenaTeam(ArenaType type)
 
         memberBotAI->Reset();
         member->TeleportTo(bot->GetMapId(), bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ(), 0);
+
+        //member->AddAura(62650,member);//冰霜之韧
 
         LOG_INFO("playerbots", "Bot {} <{}>: Member of <{}>", member->GetGUID().ToString().c_str(),
                  member->GetName().c_str(), arenateam->GetName().c_str());
@@ -269,6 +408,20 @@ bool BGJoinAction::shouldJoinBg(BattlegroundQueueTypeId queueTypeId, Battlegroun
                 return true;
             }
         }
+        //  1v1 竞技场总是评级竞技场
+        //if (type == ARENA_TYPE_1v1)
+        //    isRated = true;
+
+        //if (isRated)
+        //{
+        //    // 1v1 竞技场不需要队长权限
+        //    if (type == ARENA_TYPE_1v1 || sArenaTeamMgr->GetArenaTeamByCaptain(bot->GetGUID(), type))
+        //    {
+        //        sRandomPlayerbotMgr->BattlegroundData[queueTypeId][bracketId].ratedArenaBotCount += TeamSize;
+        //        ratedList.push_back(queueTypeId);
+        //        return true;
+        //    }
+        //}
 
         // Check if bots should join Skirmish Arena
         // We have extra bots queue because same faction can vs each other but can't be in the same group.
@@ -495,6 +648,10 @@ bool BGJoinAction::JoinQueue(uint32 type)
 
         switch (arenaType)
         {
+            case ARENA_TYPE_1v1:
+                arenaslot = 3;
+                _bgType = "1v1";
+                break;
             case ARENA_TYPE_2v2:
                 arenaslot = 0;
                 _bgType = "2v2";
@@ -596,8 +753,13 @@ bool FreeBGJoinAction::shouldJoinBg(BattlegroundQueueTypeId queueTypeId, Battleg
         bool isRated = (ratedArenaBotCount + ratedArenaPlayerCount) <
                        (BracketSize * (activeRatedArenaQueue + ratedArenaInstanceCount));
 
+        // 1v1 竞技场总是评级竞技场
+        //if (type == ARENA_TYPE_1v1)
+        //    isRated = true;
+
         if (isRated)
         {
+            // 1v1 竞技场不需要队长权限  type == ARENA_TYPE_1v1 || 
             if (sArenaTeamMgr->GetArenaTeamByCaptain(bot->GetGUID(), type))
             {
                 sRandomPlayerbotMgr->BattlegroundData[queueTypeId][bracketId].ratedArenaBotCount += TeamSize;
@@ -857,6 +1019,9 @@ bool BGStatusAction::Execute(Event event)
 
     switch (arenaType)
     {
+        case ARENA_TYPE_1v1:
+            _bgType = "1v1";
+            break;
         case ARENA_TYPE_2v2:
             _bgType = "2v2";
             break;

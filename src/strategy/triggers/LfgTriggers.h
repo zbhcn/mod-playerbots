@@ -13,7 +13,7 @@ class PlayerbotAI;
 class LfgProposalActiveTrigger : public Trigger
 {
 public:
-    LfgProposalActiveTrigger(PlayerbotAI* botAI) : Trigger(botAI, "lfg proposal active", 20 * 2000) {}
+    LfgProposalActiveTrigger(PlayerbotAI* botAI) : Trigger(botAI, "lfg proposal active", 3 * 2000) {}//缩短机器人随机本激活时间原为40秒
 
     bool IsActive() override;
 };
@@ -21,7 +21,7 @@ public:
 class UnknownDungeonTrigger : public Trigger
 {
 public:
-    UnknownDungeonTrigger(PlayerbotAI* botAI) : Trigger(botAI, "unknown dungeon", 20 * 2000) {}
+    UnknownDungeonTrigger(PlayerbotAI* botAI) : Trigger(botAI, "unknown dungeon", 3 * 2000) {}//缩短机器人随机本转让队长时间原为40秒
 
     bool IsActive() override;
 };

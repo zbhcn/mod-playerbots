@@ -206,5 +206,4 @@ class FrostfireBoltTrigger : public DebuffTrigger
 public:
     FrostfireBoltTrigger(PlayerbotAI* botAI) : DebuffTrigger(botAI, "frostfire bolt", 1, true) {}
 };
-
 #endif

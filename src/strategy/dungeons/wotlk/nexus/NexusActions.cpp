@@ -33,6 +33,11 @@ bool MoveFromWhirlwindAction::Execute(Event event)
         default:
             break;
     }
+    // 检查 boss 是否为 nullptr
+    if (!boss)
+    {
+        return false;
+    }
     float bossDistance = bot->GetExactDist2d(boss->GetPosition());
     if (!boss || bossDistance > targetDist)
     {

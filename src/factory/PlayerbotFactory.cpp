@@ -392,12 +392,9 @@ void PlayerbotFactory::Randomize(bool incremental)
     // bot->SaveToDB(false, false);
 
     // pmo = sPerformanceMonitor->start(PERF_MON_RNDBOT, "PlayerbotFactory_Guilds");
+    // LOG_INFO("playerbots", "Initializing guilds...");
     // bot->SaveToDB(false, false);
-    if (sPlayerbotAIConfig->randomBotGuildCount > 0)
-    {
-        LOG_DEBUG("playerbots", "Initializing guilds...");
-        InitGuild();
-    }
+    // InitGuild();
     // bot->SaveToDB(false, false);
     // if (pmo)
     //    pmo->finish();
@@ -1024,13 +1021,13 @@ void PlayerbotFactory::InitTalentsTree(bool increment /*false*/, bool use_templa
     {
         InitTalentsByTemplate(specTab);
     }
-    // if LimitTalentsExpansion = 1 there may be unused talent points
-    if (bot->GetFreeTalentPoints())
-        InitTalents((specTab + 1) % 3);
-
-    if (bot->GetFreeTalentPoints())
-        InitTalents((specTab + 2) % 3);
-    
+    // always use template now
+    // else
+    // {
+    //     InitTalents(specTab);
+    //     if (bot->GetFreeTalentPoints())
+    //         InitTalents((specTab + 1) % 3);
+    // }
     bot->SendTalentsInfoData(false);
 }
 
@@ -1588,7 +1585,7 @@ void PlayerbotFactory::InitEquipment(bool incremental, bool second_chance)
 
         Item* oldItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot);
 
-        if (second_chance && oldItem)
+        if (second_chance && oldItem && oldItem->GetTypeId() != 13)//禁止删除钥匙
         {
             bot->DestroyItem(INVENTORY_SLOT_BAG_0, slot, true);
         }
@@ -1758,7 +1755,10 @@ void PlayerbotFactory::InitEquipment(bool incremental, bool second_chance)
                 continue;
 
             if (Item* oldItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, slot))
+            {
+                if (oldItem->GetTypeId() != 13)//禁止删除钥匙
                 bot->DestroyItem(INVENTORY_SLOT_BAG_0, slot, true);
+            }
 
             std::vector<uint32>& ids = items[slot];
             if (ids.empty())
@@ -1823,7 +1823,8 @@ bool PlayerbotFactory::IsDesiredReplacement(Item* item)
     // }
 
     uint32 delta = 1 + (80 - bot->GetLevel()) / 10;
-    return proto->Quality < ITEM_QUALITY_RARE || int32(bot->GetLevel() - requiredLevel) > delta;
+    //更改机器人装备装等
+    return proto->Quality < ITEM_QUALITY_EPIC || int32(bot->GetLevel() - requiredLevel) > delta;
 }
 
 inline Item* StoreNewItemInInventorySlot(Player* player, uint32 newItemId, uint32 count)
@@ -1963,8 +1964,8 @@ void PlayerbotFactory::InitBags(bool destroyOld)
         uint16 dest;
         if (!CanEquipUnseenItem(slot, dest, newItemId))
             continue;
-
-        if (old_bag && destroyOld)
+        // 禁止删除钥匙
+        if (old_bag && destroyOld && old_bag->GetTypeId() != 13)
         {
             bot->DestroyItem(INVENTORY_SLOT_BAG_0, slot, true);
         }
@@ -2623,12 +2624,6 @@ void PlayerbotFactory::InitTalentsByTemplate(uint32 specTab)
         for (std::vector<uint32>& p : sPlayerbotAIConfig->parsedSpecLinkOrder[cls][specIndex][level])
         {
             uint32 tab = p[0], row = p[1], col = p[2], lvl = p[3];
-            if (sPlayerbotAIConfig->limitTalentsExpansion && bot->GetLevel() <= 60 && (row > 6 || (row == 6 && col != 1)))
-                continue;
-
-            if (sPlayerbotAIConfig->limitTalentsExpansion && bot->GetLevel() <= 70 && (row > 8 || (row == 8 && col != 1)))
-                continue;
-
             uint32 talentID = 0;
             uint32 learnLevel = 0;
             std::vector<TalentEntry const*>& spells = spells_row[row];
@@ -3197,6 +3192,15 @@ void PlayerbotFactory::InitReagents()
         if (count > 0)
             StoreItem(item.first, count);
     }
+    StoreItem(27991, 1);  // 暗影迷宫钥匙
+    StoreItem(28395, 1);  // 破碎大厅钥匙
+    StoreItem(30622, 1);  // 焰铸钥匙(地狱火堡垒)
+    StoreItem(31084, 1);  // 禁魔监狱钥匙
+    StoreItem(31704, 1);  // 风暴钥匙
+    StoreItem(30623, 1);  // 水库钥匙
+    StoreItem(30633, 1);  // 奥金尼钥匙
+    StoreItem(30634, 1);  // 星船钥匙
+    StoreItem(30635, 1);  // 时光之钥
 }
 
 void PlayerbotFactory::InitGlyphs(bool increment)
@@ -3231,12 +3235,6 @@ void PlayerbotFactory::InitGlyphs(bool increment)
                 bot->SetGlyph(slotIndex, 0, true);
             }
         }
-    }
-
-    if (sPlayerbotAIConfig->limitTalentsExpansion && bot->GetLevel() <= 70)
-    {
-        bot->SendTalentsInfoData(false);
-        return;
     }
 
     uint32 level = bot->GetLevel();
@@ -3694,7 +3692,7 @@ void PlayerbotFactory::InitArenaTeam()
 
             LOG_INFO("playerbots", "Random bot arena teams deleted");
         }
-
+        RandomPlayerbotFactory::CreateRandomArenaTeams(ARENA_TYPE_1v1, sPlayerbotAIConfig->randomBotArenaTeam1v1Count);
         RandomPlayerbotFactory::CreateRandomArenaTeams(ARENA_TYPE_2v2, sPlayerbotAIConfig->randomBotArenaTeam2v2Count);
         RandomPlayerbotFactory::CreateRandomArenaTeams(ARENA_TYPE_3v3, sPlayerbotAIConfig->randomBotArenaTeam3v3Count);
         RandomPlayerbotFactory::CreateRandomArenaTeams(ARENA_TYPE_5v5, sPlayerbotAIConfig->randomBotArenaTeam5v5Count);
@@ -3742,7 +3740,7 @@ void PlayerbotFactory::InitArenaTeam()
                     {
                         return;
                     }
-                    return;
+                    //return;
                 }
             }
 

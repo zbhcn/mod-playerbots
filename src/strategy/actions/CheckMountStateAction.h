@@ -37,8 +37,8 @@ private:
     bool ShouldFollowMasterMountState(Player* master, bool noAttackers, bool shouldMount) const;
     bool ShouldDismountForMaster(Player* master) const;
     int32 CalculateMasterMountSpeed(Player* master, const MountData& mountData) const;
-    bool CheckForSwiftMount() const;
-    std::map<uint32, std::map<int32, std::vector<uint32>>> GetAllMountSpells() const;
+    //bool CheckForSwiftMount() const;
+    //std::map<uint32, std::map<int32, std::vector<uint32>>> GetAllMountSpells() const;
     bool TryPreferredMount(Player* master) const;
     uint32 GetMountType(Player* master) const;
     bool TryRandomMountFiltered(const std::map<int32, std::vector<uint32>>& spells, int32 masterSpeed) const;

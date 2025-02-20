@@ -67,7 +67,7 @@ public:
         creators["accept trade"] = &WorldPacketActionContext::accept_trade;
         creators["store loot"] = &WorldPacketActionContext::store_loot;
 
-        // quest
+        // quest//优化性能
         creators["talk to quest giver"] = &WorldPacketActionContext::turn_in_quest;
         creators["accept quest"] = &WorldPacketActionContext::accept_quest;
         creators["confirm quest"] = &WorldPacketActionContext::confirm_quest;
@@ -127,13 +127,13 @@ private:
     static Action* auto_release(PlayerbotAI* botAI) { return new AutoReleaseSpiritAction(botAI); }
     static Action* revive_from_corpse(PlayerbotAI* botAI) { return new ReviveFromCorpseAction(botAI); }
     static Action* accept_invitation(PlayerbotAI* botAI) { return new AcceptInvitationAction(botAI); }
-    static Action* give_leader_in_dungeon(PlayerbotAI* botAI) { return new GiveLeaderAction(botAI, "I don't know this dungeon, lead the way!"); }
+    static Action* give_leader_in_dungeon(PlayerbotAI* botAI) { return new GiveLeaderAction(botAI, "我不熟悉这里,你带路!"); }
     static Action* pass_leadership_to_master(PlayerbotAI* botAI) { return new PassLeadershipToMasterAction(botAI); }
-    static Action* tell_not_enough_money(PlayerbotAI* botAI) { return new TellMasterAction(botAI, "Not enough money"); }
-    static Action* tell_not_enough_reputation(PlayerbotAI* botAI) { return new TellMasterAction(botAI, "Not enough reputation"); }
+    static Action* tell_not_enough_money(PlayerbotAI* botAI) { return new TellMasterAction(botAI, "钱不够"); }
+    static Action* tell_not_enough_reputation(PlayerbotAI* botAI) { return new TellMasterAction(botAI, "声望不够"); }
     static Action* tell_cannot_equip(PlayerbotAI* botAI) { return new InventoryChangeFailureAction(botAI); }
 
-    // quest
+    // quest 优化性能
     static Action* quest_update_add_kill(PlayerbotAI* ai) { return new QuestUpdateAddKillAction(ai); }
     static Action* quest_update_add_item(PlayerbotAI* ai) { return new QuestUpdateAddItemAction(ai); }
     static Action* quest_update_failed(PlayerbotAI* ai) { return new QuestUpdateFailedAction(ai); }
@@ -146,7 +146,7 @@ private:
     static Action* accept_all_quests(PlayerbotAI* botAI) { return new AcceptAllQuestsAction(botAI); }
     static Action* accept_quest_share(PlayerbotAI* botAI) { return new AcceptQuestShareAction(botAI); }
     static Action* turn_in_query_quest(PlayerbotAI* botAI) { return new TurnInQueryQuestAction(botAI); }
-    //static Action* quest_confirm_accept(PlayerbotAI* botAI) { return new QuestConfirmAcceptAction(botAI); }
+    ////static Action* quest_confirm_accept(PlayerbotAI* botAI) { return new QuestConfirmAcceptAction(botAI); }
 
     static Action* loot_roll(PlayerbotAI* botAI) { return new LootRollAction(botAI); }
     static Action* master_loot_roll(PlayerbotAI* botAI) { return new MasterLootRollAction(botAI); }

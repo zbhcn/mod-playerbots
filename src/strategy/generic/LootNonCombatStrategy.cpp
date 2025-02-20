@@ -18,8 +18,8 @@ void LootNonCombatStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 
 void GatherStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 {
-    triggers.push_back(
-        new TriggerNode("timer", NextAction::array(0, new NextAction("add gathering loot", 2.0f), nullptr)));
+    //优化性能，禁止采集
+    triggers.push_back(new TriggerNode("timer", NextAction::array(0, new NextAction("add gathering loot", 2.0f), nullptr)));
 }
 
 void RevealStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)

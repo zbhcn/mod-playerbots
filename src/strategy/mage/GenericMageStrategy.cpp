@@ -18,7 +18,7 @@ public:
         creators["ice lance"] = &ice_lance;
         creators["fire blast"] = &fire_blast;
         creators["scorch"] = &scorch;
-        creators["frost nova"] = &frost_nova;
+        creators["frost nova"] = &frost_nova;//冰霜新星
         creators["cone of cold"] = &cone_of_cold;
         creators["icy veins"] = &icy_veins;
         creators["combustion"] = &combustion;
@@ -73,9 +73,9 @@ private:
 
     static ActionNode* frost_nova([[maybe_unused]] PlayerbotAI* botAI)
     {
-        return new ActionNode("frost nova",
+        return new ActionNode("frost nova",  //冰环
                               /*P*/ nullptr,
-                              /*A*/ nullptr,
+                              /*A*/ NextAction::array(0, new NextAction("flee", ACTION_MOVE + 9), nullptr),
                               /*C*/ nullptr);
     }
 
@@ -179,9 +179,8 @@ void GenericMageStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         new TriggerNode("fire ward", NextAction::array(0, new NextAction("fire ward", ACTION_EMERGENCY), nullptr)));
     triggers.push_back(
         new TriggerNode("frost ward", NextAction::array(0, new NextAction("frost ward", ACTION_EMERGENCY), nullptr)));
-        
-        triggers.push_back(new TriggerNode("enemy too close for spell",
-            NextAction::array(0, new NextAction("blink back", ACTION_MOVE + 5), nullptr)));
+    triggers.push_back(new TriggerNode("enemy too close for spell",
+                                       NextAction::array(0, new NextAction("blink back", ACTION_MOVE + 5), nullptr)));
 }
 
 void MageCureStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)

@@ -6,7 +6,6 @@
 #include "GenericHunterStrategy.h"
 
 #include "Playerbots.h"
-#include "Strategy.h"
 
 class GenericHunterStrategyActionNodeFactory : public NamedObjectFactory<ActionNode>
 {
@@ -20,13 +19,15 @@ public:
         creators["wing clip"] = &wing_clip;
         creators["mongoose bite"] = &mongoose_bite;
         creators["raptor strike"] = &raptor_strike;
+        creators["disengage"] = &disengage;
+        creators["Frost Trap"] = &Frost_Trap;
         creators["explosive trap"] = &explosive_trap;
     }
 
 private:
     static ActionNode* rapid_fire([[maybe_unused]] PlayerbotAI* botAI)
     {
-        return new ActionNode("rapid fire",
+        return new ActionNode("rapid fire",//准备就绪
                               /*P*/ nullptr,
                               /*A*/ NextAction::array(0, new NextAction("readiness"), nullptr),
                               /*C*/ nullptr);
@@ -34,26 +35,25 @@ private:
 
     static ActionNode* aspect_of_the_pack([[maybe_unused]] PlayerbotAI* botAI)
     {
-        return new ActionNode("aspect of the pack",
+        return new ActionNode("aspect of the pack",//豹群守护
                               /*P*/ nullptr,
-                              /*A*/ NextAction::array(0, new NextAction("aspect of the cheetah"), nullptr),
+                              /*A*/ NextAction::array(0, new NextAction("aspect of the cheetah"), nullptr),//猎豹守护
                               /*C*/ nullptr);
     }
 
     static ActionNode* feign_death([[maybe_unused]] PlayerbotAI* botAI)
     {
-        return new ActionNode("feign death",
+        return new ActionNode("feign death",//假死
                               /*P*/ nullptr,
                               /*A*/ nullptr,
                               /*C*/ nullptr);
     }
 
     static ActionNode* wing_clip([[maybe_unused]] PlayerbotAI* botAI)
-    {
+    {//摔绊
         return new ActionNode("wing clip",
                               /*P*/ nullptr,
-                              // /*A*/ NextAction::array(0, new NextAction("mongoose bite"), nullptr),
-                              nullptr,
+                              /*A*/ NextAction::array(0, new NextAction("disengage", 20), nullptr),
                               /*C*/ nullptr);
     }
 
@@ -68,8 +68,24 @@ private:
     static ActionNode* raptor_strike([[maybe_unused]] PlayerbotAI* botAI)
     {
         return new ActionNode("raptor strike",
-                              /*P*/ NextAction::array(0, new NextAction("melee"), nullptr),
+                              /*A*/ NextAction::array(0, new NextAction("melee"), nullptr),
+                              /*P*/ nullptr,
+                              /*C*/ nullptr);
+    }
+
+    static ActionNode* disengage([[maybe_unused]] PlayerbotAI* botAI)
+    {
+        return new ActionNode("disengage",//逃脱
+                              /*P*/ nullptr,
                               /*A*/ nullptr,
+                              /*C*/ nullptr);
+    }
+
+    static ActionNode* Frost_Trap([[maybe_unused]] PlayerbotAI* botAI)
+    {
+        return new ActionNode("Frost Trap",
+                              /*A*/ nullptr,
+                              /*P*/ NextAction::array(0, new NextAction("melee", 28), nullptr),
                               /*C*/ nullptr);
     }
 
@@ -80,7 +96,6 @@ private:
                               /*A*/ NextAction::array(0, new NextAction("immolation trap"), nullptr),
                               /*C*/ nullptr);
     }
-    
 };
 
 GenericHunterStrategy::GenericHunterStrategy(PlayerbotAI* botAI) : CombatStrategy(botAI)
@@ -91,31 +106,36 @@ GenericHunterStrategy::GenericHunterStrategy(PlayerbotAI* botAI) : CombatStrateg
 void GenericHunterStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 {
     CombatStrategy::InitTriggers(triggers);
+    //triggers.push_back(new TriggerNode("enemy too close for shoot",//重复了
+    //                                   NextAction::array(0, new NextAction("disengage", ACTION_HIGH + 19), nullptr)));
 
     triggers.push_back(new TriggerNode("enemy within melee",
-                                       NextAction::array(0,
-                                                         new NextAction("explosive trap", ACTION_MOVE + 7),
+                                       NextAction::array(0, new NextAction("explosive trap", ACTION_MOVE + 7),
                                                          new NextAction("mongoose bite", ACTION_HIGH + 2),
-                                                         new NextAction("wing clip", ACTION_HIGH + 1),
-                                                         nullptr)));
-    triggers.push_back(
-        new TriggerNode("medium threat", NextAction::array(0, new NextAction("feign death", 35.0f), nullptr)));
+                                                         new NextAction("wing clip", ACTION_HIGH + 1), nullptr)));
+    
+    triggers.push_back(new TriggerNode("enemy is close",//当距离敌人大于5码TooCloseDistance
+                                       NextAction::array(0, new NextAction("rapid fire", ACTION_NORMAL + 6), nullptr)));
+    triggers.push_back(new TriggerNode("medium threat",
+                                       NextAction::array(0, new NextAction("feign death", ACTION_MOVE + 8), nullptr)));
+
     triggers.push_back(new TriggerNode("hunters pet medium health",
-                                       NextAction::array(0, new NextAction("mend pet", ACTION_HIGH + 2), nullptr)));
+                                       NextAction::array(0, new NextAction("mend pet", ACTION_HIGH + 3), nullptr)));
     // triggers.push_back(new TriggerNode("no ammo", NextAction::array(0, new NextAction("switch to melee", ACTION_HIGH
     // + 1), new NextAction("say::no ammo", ACTION_HIGH), nullptr)));
     triggers.push_back(new TriggerNode("aspect of the viper",
                                        NextAction::array(0, new NextAction("aspect of the viper", ACTION_HIGH), NULL)));
+    //triggers.push_back(new TriggerNode(
+    //    "enemy out of melee", NextAction::array(0, new NextAction("concussive shot", ACTION_HIGH + 16), NULL)));
     triggers.push_back(new TriggerNode("enemy too close for auto shot",
-                                       NextAction::array(0,
-                                        new NextAction("disengage", ACTION_MOVE + 5),
-                                        new NextAction("flee", ACTION_MOVE + 4),
-                                        nullptr)));
+                                       NextAction::array(0, new NextAction("disengage", ACTION_MOVE + 5),
+                                                         new NextAction("flee", ACTION_MOVE + 4), nullptr)));
+    triggers.push_back(new TriggerNode(
+        "enemy player near", NextAction::array(0, new NextAction("Frost Trap", ACTION_HIGH + 15), NULL)));
     triggers.push_back(
-        new TriggerNode("low tank threat",
-                        NextAction::array(0, new NextAction("misdirection on main tank", ACTION_HIGH + 7), NULL)));
+        new TriggerNode("low tank threat", NextAction::array(0, new NextAction("misdirection on main tank", ACTION_MOVE + 1), NULL)));
     triggers.push_back(
-        new TriggerNode("low health", NextAction::array(0, new NextAction("deterrence", ACTION_HIGH + 5), nullptr)));
+        new TriggerNode("low health", NextAction::array(0, new NextAction("deterrence", ACTION_MOVE), nullptr)));
     
     triggers.push_back(new TriggerNode("tranquilizing shot enrage",
                                        NextAction::array(0, new NextAction("tranquilizing shot", 61.0f), NULL)));
@@ -144,9 +164,9 @@ void HunterCcStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 
 void HunterTrapWeaveStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 {
-    triggers.push_back(new TriggerNode(
-        "immolation trap no cd", NextAction::array(0, new NextAction("reach melee", ACTION_HIGH + 3), nullptr)));
-    
+    triggers.push_back(new TriggerNode("immolation trap no cd",
+                                       NextAction::array(0, new NextAction("reach melee", ACTION_HIGH + 3), nullptr)));
+
     // triggers.push_back(new TriggerNode(
     //     "scare beast", NextAction::array(0, new NextAction("scare beast on cc", ACTION_HIGH + 3), nullptr)));
     // triggers.push_back(new TriggerNode(

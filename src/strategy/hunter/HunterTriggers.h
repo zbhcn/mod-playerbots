@@ -192,5 +192,4 @@ class ImmolationTrapNoCdTrigger : public SpellNoCooldownTrigger
 public:
     ImmolationTrapNoCdTrigger(PlayerbotAI* ai) : SpellNoCooldownTrigger(ai, "immolation trap") {}
 };
-
 #endif

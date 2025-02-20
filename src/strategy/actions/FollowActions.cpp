@@ -42,7 +42,15 @@ bool FollowAction::Execute(Event event)
     }
     // if (moved)
     // botAI->SetNextCheckDelay(sPlayerbotAIConfig->reactDelay);
-
+    // 跟随主人跳或上升
+    if (botAI->GetMaster() && bot->GetMapId() && !bot->IsInCombat() && !botAI->GetMaster()->IsInCombat())
+    {
+        if (std::abs(bot->GetPositionZ() - botAI->GetMaster()->GetPositionZ()) > 4 && botAI->GetMaster()->GetMapId() &&
+            bot->GetMapId() == botAI->GetMaster()->GetMapId() && botAI->GetMaster()->GetMap() &&
+            botAI->GetMaster()->GetMap()->IsDungeon())
+            bot->TeleportTo(botAI->GetMaster()->GetMapId(), botAI->GetMaster()->GetPositionX(),
+                            botAI->GetMaster()->GetPositionY(), botAI->GetMaster()->GetPositionZ(), 0);
+    }
     return moved;
 }
 

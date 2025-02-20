@@ -65,12 +65,20 @@ bool EnemyTooCloseForAutoShotTrigger::IsActive()
     uint32 spellId = AI_VALUE2(uint32, "spell id", "immolation trap");
     if (!spellId)
         trapToCast = false;
-
     if (spellId && bot->HasSpellCooldown(spellId))
         trapToCast = false;
+    if (!trapToCast && (target->GetVictim() != bot || target->isFrozen() || !target->CanFreeMove()) &&
+        bot->IsWithinMeleeRange(target))
+        return true;
 
-    return !trapToCast && (target->GetVictim() != bot || target->isFrozen() || !target->CanFreeMove()) &&
-           bot->IsWithinMeleeRange(target);
+    // 判断目标是否在自动射击的最小距离之外
+    float minRange = 5.0f;  // 自动射击的最小距离（可根据实际情况调整）
+    float distance = bot->GetDistance(target);
+
+    return distance < minRange;
+
+    //return target && (target->GetVictim() != bot || target->isFrozen() || !target->CanFreeMove()) &&
+    //       bot->IsWithinMeleeRange(target);
 
     // if (target->GetTarget() == bot->GetGUID() && !bot->GetGroup() && !target->HasUnitState(UNIT_STATE_ROOT) &&
     // GetSpeedInMotion(target) > GetSpeedInMotion(bot) * 0.65f)
@@ -99,9 +107,17 @@ bool EnemyTooCloseForShootTrigger::IsActive()
 {
     Unit* target = AI_VALUE(Unit*, "current target");
     // target->IsWithinCombatRange()
+    if (!target)
+        return false;
 
-    return target && (target->GetVictim() != bot || target->isFrozen() || !target->CanFreeMove()) &&
-           target->IsWithinCombatRange(bot, MIN_MELEE_REACH);
+    // 判断目标是否在自动射击的最小距离之外
+    float minRange = 5.0f;  // 自动射击的最小距离（可根据实际情况调整）
+    float distance = bot->GetDistance(target);
+
+    return distance < minRange;
+
+    //return target && (target->GetVictim() != bot || target->isFrozen() || !target->CanFreeMove()) &&
+    //       target->IsWithinCombatRange(bot, MIN_MELEE_REACH);
 
     //     Unit* target = AI_VALUE(Unit*, "current target");
     //     if (!target)
@@ -137,7 +153,7 @@ bool EnemyTooCloseForShootTrigger::IsActive()
 bool EnemyTooCloseForMeleeTrigger::IsActive()
 {
     Unit* target = AI_VALUE(Unit*, "current target");
-    if (target && target->IsPlayer())
+    if (target && target->IsPlayer() && !bot->InArena())//让竞技场内能变熊
         return false;
 
     return target && AI_VALUE2(bool, "inside target", "current target");

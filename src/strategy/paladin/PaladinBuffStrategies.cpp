@@ -74,8 +74,8 @@ void PaladinBuffCastStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 
 void PaladinBuffSpeedStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 {
-    triggers.push_back(new TriggerNode(
-        "crusader aura", NextAction::array(0, new NextAction("crusader aura", ACTION_NORMAL), nullptr)));
+    triggers.push_back(new TriggerNode("crusader aura",
+                                       NextAction::array(0, new NextAction("crusader aura", ACTION_NORMAL), nullptr)));
 }
 
 void PaladinBuffThreatStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)

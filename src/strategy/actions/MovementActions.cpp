@@ -194,7 +194,7 @@ bool MovementAction::MoveTo(uint32 mapId, float x, float y, float z, bool idle, 
     }
     bool generatePath = !bot->IsFlying() && !bot->isSwimming();
     bool disableMoveSplinePath = sPlayerbotAIConfig->disableMoveSplinePath >= 2 ||
-                                 (sPlayerbotAIConfig->disableMoveSplinePath == 1 && bot->InBattleground());
+        (sPlayerbotAIConfig->disableMoveSplinePath == 1 && bot->InArena());  //&& bot->InBattleground());
     if (Vehicle* vehicle = bot->GetVehicle())
     {
         VehicleSeatEntry const* seat = vehicle->GetSeatForPassenger(bot);

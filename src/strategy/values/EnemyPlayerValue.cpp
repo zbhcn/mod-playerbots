@@ -17,7 +17,8 @@ bool NearestEnemyPlayersValue::AcceptUnit(Unit* unit)
         !sPlayerbotAIConfig->IsPvpProhibited(enemy->GetZoneId(), enemy->GetAreaId()) &&
         !enemy->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NON_ATTACKABLE_2) &&
         ((inCannon || !enemy->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))) &&
-        /*!enemy->HasStealthAura() && !enemy->HasInvisibilityAura()*/ enemy->CanSeeOrDetect(bot) &&
+        /*!enemy->HasStealthAura() && !enemy->HasInvisibilityAura()*/
+        (bot->InArena() || enemy->CanSeeOrDetect(bot)) &&  // 竞技场视野可见
         !(enemy->HasSpiritOfRedemptionAura()))
         return true;
 
@@ -49,8 +50,9 @@ Unit* EnemyPlayerValue::Calculate()
         ThreatMgr* threatMgr = pReference->GetSource();
         if (Unit* pTarget = threatMgr->GetOwner())
         {
-            if (pTarget != pVictim && pTarget->IsPlayer() && pTarget->CanSeeOrDetect(bot) &&
-                bot->IsWithinDist(pTarget, VISIBILITY_DISTANCE_NORMAL))
+            if (pTarget != pVictim && pTarget->IsPlayer() &&
+                (pTarget->CanSeeOrDetect(bot) || bot->InBattleground() || bot->InArena()) && //隐身不被攻击
+                !pTarget->m_stealth.GetFlags() && bot->IsWithinDist(pTarget, VISIBILITY_DISTANCE_NORMAL)) 
             {
                 if (bot->GetTeamId() == TEAM_HORDE)
                 {
@@ -62,7 +64,18 @@ Unit* EnemyPlayerValue::Calculate()
                     if (pTarget->HasAura(23335))
                         return pTarget;
                 }
-
+                if ((bot->InArena() || bot->InBattleground()) && //在没有敌对治疗的前提下
+                    !botAI->GetAiObjectContext()->GetValue<Unit*>("enemy healer target")->Get())
+                {
+                    if (pTarget->getClass() == CLASS_HUNTER)
+                        return pTarget;  // 优先攻击目标
+                    if (pTarget->getClass() == CLASS_MAGE)
+                        return pTarget;
+                    if (pTarget->getClass() == CLASS_WARLOCK)
+                        return pTarget;
+                    if (pTarget->getClass() == CLASS_ROGUE)
+                        return pTarget;
+                }
                 targets.push_back(pTarget);
             }
         }
@@ -114,8 +127,8 @@ Unit* EnemyPlayerValue::Calculate()
                                                                                                       : 20.0f;
         if (!bot->IsWithinDist(pTarget, aggroDistance))
             continue;
-
-        if (bot->IsWithinLOSInMap(pTarget) &&
+        // 竞技场禁用视野检查
+        if ((bot->InArena() || bot->IsWithinLOSInMap(pTarget)) &&
             (controllingCannon || (fabs(bot->GetPositionZ() - pTarget->GetPositionZ()) < 30.0f)))
             return pTarget;
     }
@@ -136,7 +149,9 @@ Unit* EnemyPlayerValue::Calculate()
 
                 if (Unit* pAttacker = pMember->getAttackerForHelper())
                     if (pAttacker->IsPlayer() && bot->IsWithinDist(pAttacker, maxAggroDistance * 2.0f) &&
-                        bot->IsWithinLOSInMap(pAttacker) && pAttacker != pVictim && pAttacker->CanSeeOrDetect(bot))
+                        //竞技场禁用视野检查
+                        (bot->InArena() || bot->IsWithinLOSInMap(pAttacker)) &&
+                        pAttacker != pVictim && (pAttacker->CanSeeOrDetect(bot) || bot->InArena()))
                         return pAttacker;
             }
         }

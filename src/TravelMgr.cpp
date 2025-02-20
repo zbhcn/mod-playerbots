@@ -20,6 +20,15 @@
 #include "VMapMgr2.h"
 #include "Corpse.h"
 
+//WorldPosition::WorldPosition(std::string const str)
+//{
+//    std::stringstream out(str);
+//    out >> this->m_mapId;
+//    out >> this->m_positionX;
+//    out >> this->m_positionY;
+//    out >> this->m_positionZ;
+//    out >> this->m_orientation;
+//}
 WorldPosition::WorldPosition(std::string const str)
 {
     std::vector<std::string> tokens = split(str, '|');
@@ -375,25 +384,13 @@ std::string const WorldPosition::print()
 std::string const WorldPosition::to_string()
 {
     std::stringstream out;
-    out << m_mapId << '|';
-    out << m_positionX << '|';
-    out << m_positionY << '|';
-    out << m_positionZ << '|';
-    out << m_orientation;
+    out << GetMapId();
+    out << GetPositionX();
+    out << GetPositionY();
+    out << GetPositionZ();
+    out << GetOrientation();
     return out.str();
-}
-
-std::vector<std::string> WorldPosition::split(const std::string& s, char delimiter)
-{
-    std::vector<std::string> tokens;
-    std::string token;
-    std::istringstream tokenStream(s);
-    while (std::getline(tokenStream, token, delimiter))
-    {
-        tokens.push_back(token);
-    }
-    return tokens;
-}
+};
 
 void WorldPosition::printWKT(std::vector<WorldPosition> points, std::ostringstream& out, uint32 dim, bool loop)
 {

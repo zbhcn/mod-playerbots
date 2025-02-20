@@ -55,10 +55,10 @@ public:
     bool IsInPvpProhibitedArea(uint32 id);
 
     bool enabled;
-    bool allowAccountBots, allowGuildBots;
+    bool allowGuildBots, allowPlayerBots;
     bool randomBotGuildNearby, randomBotInvitePlayer, inviteChat;
     uint32 globalCoolDown, reactDelay, maxWaitForMove, disableMoveSplinePath, maxMovementSearchTime,
-        dispelAuraDuration, passiveDelay, repeatDelay, errorDelay, rpgDelay, sitDelay, returnDelay, lootDelay;
+        dispelAuraDuration, passiveDelay, repeatDelay, errorDelay, rpgDelay, sitDelay, returnDelay, lootDelay, botcount;
     bool dynamicReactDelay;
     float sightDistance, spellDistance, reactDistance, grindDistance, lootDistance, shootDistance, fleeDistance,
         tooCloseDistance, meleeDistance, followDistance, whisperDistance, contactDistance, aoeRadius, rpgDistance,
@@ -174,7 +174,7 @@ public:
 
     bool randomBotJoinBG;
     bool randomBotAutoJoinBG;
-
+    //uint32 randomBotAutoJoinWarsongBracket;
     std::string randomBotAutoJoinICBrackets;
     std::string randomBotAutoJoinEYBrackets;
     std::string randomBotAutoJoinAVBrackets;
@@ -188,11 +188,11 @@ public:
     uint32 randomBotAutoJoinBGWSCount;
 
     uint32 randomBotAutoJoinArenaBracket;
-
+    //uint32 randomBotAutoJoinBGWarsongCount;
+    uint32 randomBotAutoJoinBGRatedArena1v1Count;
     uint32 randomBotAutoJoinBGRatedArena2v2Count;
     uint32 randomBotAutoJoinBGRatedArena3v3Count;
     uint32 randomBotAutoJoinBGRatedArena5v5Count;
-
     bool randomBotLoginAtStartup;
     uint32 randomBotTeleLowerLevel, randomBotTeleHigherLevel;
     bool logInGroupOnly, logValuesPerTick;
@@ -279,7 +279,6 @@ public:
     uint32 randomBotAllianceRatio;
     uint32 randomBotHordeRatio;
     bool disableDeathKnightLogin;
-    bool limitTalentsExpansion;
     uint32 botActiveAlone;
     uint32 BotActiveAloneForceWhenInRadius;
     bool BotActiveAloneForceWhenInZone;
@@ -318,6 +317,7 @@ public:
     uint32 randomBotArenaTeamCount;
     uint32 randomBotArenaTeamMaxRating;
     uint32 randomBotArenaTeamMinRating;
+    uint32 randomBotArenaTeam1v1Count;
     uint32 randomBotArenaTeam2v2Count;
     uint32 randomBotArenaTeam3v3Count;
     uint32 randomBotArenaTeam5v5Count;
@@ -336,7 +336,7 @@ public:
     bool botRepairWhenSummon;
     bool autoInitOnly;
     float autoInitEquipLevelLimitRatio;
-    int32 maxAddedBots;
+    int32 maxAddedBots, maxAddedBotsPerClass;
     int32 addClassCommand;
     int32 addClassAccountPoolSize;
     int32 maintenanceCommand;

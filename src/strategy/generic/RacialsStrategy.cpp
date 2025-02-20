@@ -34,7 +34,8 @@ void RacialsStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode(
         "generic boost", NextAction::array(0, new NextAction("blood fury", ACTION_NORMAL + 5), 
         new NextAction("berserking", ACTION_NORMAL + 5),
-        new NextAction("use trinket", ACTION_NORMAL + 4),
+            //优化减少延迟
+        //new NextAction("use trinket", ACTION_NORMAL + 4),
         nullptr)));
     
 }

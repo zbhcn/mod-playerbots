@@ -308,9 +308,9 @@ std::string const ChatHelper::FormatQuest(Quest const* quest)
     {
         return "Invalid quest";
     }
-
     std::ostringstream out;
-    out << "|cFFFFFF00|Hquest:" << quest->GetQuestId() << ':' << quest->GetQuestLevel() << "|h[" << quest->GetTitle() << "]|h|r";
+    out << "|cFFFFFF00|Hquest:" << quest->GetQuestId() << ':' << quest->GetQuestLevel() << "|h[" << quest->GetTitle()
+        << "]|h|r";
     return out.str();
 }
 
@@ -318,7 +318,7 @@ std::string const ChatHelper::FormatGameobject(GameObject* go)
 {
     std::ostringstream out;
     out << "|cFFFFFF00|Hfound:" << go->GetGUID().GetRawValue() << ":" << go->GetEntry() << ":"
-        << "|h[" << go->GetNameForLocaleIdx(LOCALE_enUS) << "]|h|r";
+        << "|h[" << go->GetNameForLocaleIdx(sWorld->GetDefaultDbcLocale()) << "]|h|r";
     return out.str();
 }
 
@@ -327,8 +327,8 @@ std::string const ChatHelper::FormatWorldobject(WorldObject* wo)
     std::ostringstream out;
     out << "|cFFFFFF00|Hfound:" << wo->GetGUID().GetRawValue() << ":" << wo->GetEntry() << ":"
         << "|h[";
-    out << (wo->ToGameObject() ? ((GameObject*)wo)->GetNameForLocaleIdx(LOCALE_enUS)
-                               : wo->GetNameForLocaleIdx(LOCALE_enUS))
+    out << (wo->ToGameObject() ? ((GameObject*)wo)->GetNameForLocaleIdx(sWorld->GetDefaultDbcLocale())
+                               : wo->GetNameForLocaleIdx(sWorld->GetDefaultDbcLocale()))
         << "]|h|r";
     return out.str();
 }
@@ -361,20 +361,25 @@ std::string const ChatHelper::FormatWorldEntry(int32 entry)
 std::string const ChatHelper::FormatSpell(SpellInfo const* spellInfo)
 {
     std::ostringstream out;
-    out << "|cffffffff|Hspell:" << spellInfo->Id << "|h[" << spellInfo->SpellName[LOCALE_enUS] << "]|h|r";
+    out << "|cffffffff|Hspell:" << spellInfo->Id << "|h[" << spellInfo->SpellName[sWorld->GetDefaultDbcLocale()]
+        << "]|h|r";
     return out.str();
 }
 
 std::string const ChatHelper::FormatItem(ItemTemplate const* proto, uint32 count, uint32 total)
 {
+    if (!proto || !proto->Quality || proto->Quality > 7)
+    {
+        return "未知物品";  // 或者抛出异常
+    }
     char color[32];
     sprintf(color, "%x", ItemQualityColors[proto->Quality]);
-
+    const std::string& name = sObjectMgr->GetItemLocale(proto->ItemId)->Name[sWorld->GetDefaultDbcLocale()];
     // const std::string &name = sObjectMgr->GetItemLocale(proto->ItemId)->Name[LOCALE_enUS];
 
     std::ostringstream out;
     out << "|c" << color << "|Hitem:" << proto->ItemId << ":0:0:0:0:0:0:0"
-        << "|h[" << proto->Name1 << "]|h|r";
+        << "|h[" << name << "]|h|r";
 
     if (count > 1)
         out << "x" << count;
@@ -422,7 +427,7 @@ std::string const ChatHelper::FormatChat(ChatMsg chat)
             break;
     }
 
-    return "unknown";
+    return "未知的";
 }
 
 uint32 ChatHelper::parseSpell(std::string const text)

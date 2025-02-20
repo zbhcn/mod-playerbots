@@ -160,7 +160,7 @@ BotRoles AiFactory::GetPlayerRoles(Player* player)
                 role = BOT_ROLE_DPS;
             break;
         case CLASS_DRUID:
-            if (tab == 0)
+            if (tab == 0 || tab == 3)
                 role = BOT_ROLE_DPS;
             else if (tab == 1)
                 role = (BotRoles)(BOT_ROLE_TANK | BOT_ROLE_DPS);
@@ -221,6 +221,8 @@ std::string AiFactory::GetPlayerSpecName(Player* player)
                 specName = "feraldps";
             else if (tab == 2)
                 specName = "resto";
+            else if (tab == 3)
+                specName = "cat";
             break;
         case CLASS_ROGUE:
             if (tab == 0)
@@ -356,7 +358,7 @@ void AiFactory::AddDefaultCombatStrategies(Player* player, PlayerbotAI* const fa
                 engine->addStrategiesNoInit("heal", "cure", "dps assist", nullptr);
             else
             {
-                if (player->GetLevel() >= 20 && !player->HasAura(16931) /*thick hide*/)
+                if (player->GetLevel() >= 20 && !player->HasAura(16931) /*厚皮天赋*/)
                 {
                     engine->addStrategiesNoInit("cat", "dps assist", nullptr);
                 }
@@ -369,10 +371,6 @@ void AiFactory::AddDefaultCombatStrategies(Player* player, PlayerbotAI* const fa
         case CLASS_HUNTER:
             engine->addStrategiesNoInit("dps", "aoe", "bdps", "dps assist", nullptr);
             engine->addStrategy("dps debuff", false);
-            // if (tab == HUNTER_TAB_SURVIVAL)
-            // {
-            //     engine->addStrategy("trap weave", false);
-            // }
             break;
         case CLASS_ROGUE:
             if (tab == ROGUE_TAB_ASSASSINATION)

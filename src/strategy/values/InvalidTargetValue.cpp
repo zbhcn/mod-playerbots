@@ -22,6 +22,7 @@ bool InvalidTargetValue::Calculate()
                target->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE) || target->HasUnitFlag(UNIT_FLAG_NON_ATTACKABLE_2) ||
                !target->IsVisible() || !target->IsAlive() || target->IsPolymorphed() || target->IsCharmed() ||
                target->HasFearAura() || target->HasUnitState(UNIT_STATE_ISOLATED) || target->IsFriendlyTo(bot) ||
+               target->HasUnitFlag(UNIT_FLAG_IMMUNE) || //无敌或冰箱时不再作为目标攻击
                !AttackersValue::IsValidTarget(target, bot);
     }
 

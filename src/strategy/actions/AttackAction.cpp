@@ -61,8 +61,13 @@ bool AttackAction::Attack(Unit* target, bool with_pet /*true*/)
 
         return false;
     }
-
-    if (!target)
+    //if (!target && bot->InArena())//竞技场视野没有目标找目标
+    //{
+    //    Unit* enemyPlayer = botAI->GetAiObjectContext()->GetValue<Unit*>("enemy player")->Get();
+    //    if (enemyPlayer)
+    //        target = enemyPlayer;
+    //}
+    if (!target)//竞技场视野
     {
         if (verbose)
             botAI->TellError("I have no target");
@@ -75,7 +80,7 @@ bool AttackAction::Attack(Unit* target, bool with_pet /*true*/)
         return false;
     }
 
-    if (!bot->IsValidAttackTarget(target))
+    if (!bot->IsValidAttackTarget(target))// && !bot->InArena()竞技场视野
     {
         if (verbose)
             botAI->TellError("I cannot attack an invalid target");
@@ -94,8 +99,8 @@ bool AttackAction::Attack(Unit* target, bool with_pet /*true*/)
 
         return false;
     }
-
-    if (!bot->IsWithinLOSInMap(target))
+    //禁用视野检查
+    if (!bot->IsWithinLOSInMap(target) && !bot->InArena())
     {
         msg << " is not in my sight";
         if (verbose)
@@ -141,8 +146,19 @@ bool AttackAction::Attack(Unit* target, bool with_pet /*true*/)
 
     context->GetValue<Unit*>("current target")->Set(target);
     context->GetValue<LootObjectStack*>("available loot")->Get()->Add(guid);
+    
+    // 竞技场中视野不可见则直接tele
+    //Battleground* bg = bot->GetBattleground();
+    //Unit* attacktarget = bot->GetVictim();
+    if (target->GetMapId() == bot->GetMapId() && !bot->IsWithinLOSInMap(target) &&
+        bot->InArena() && !bot->isMoving() && !bot->IsBeingTeleported() && bot->GetZoneId() != 4406)//禁用勇气竞技场传送(有电梯那个)
+        bot->TeleportTo(target->GetMapId(), target->GetPositionX(), target->GetPositionY(),
+                        target->GetPositionZ(), 0);
+    // bot->TeleportTo(bot->GetMapId(), lastMovement.lastMoveToX, lastMovement.lastMoveToY, lastMovement.lastMoveToZ,
+    // 0);
 
     LastMovement& lastMovement = AI_VALUE(LastMovement&, "last movement");
+    //if (lastMovement.priority < MovementPriority::MOVEMENT_COMBAT && bot->isMoving())
     bool moveControlled = bot->GetMotionMaster()->GetMotionSlotType(MOTION_SLOT_CONTROLLED) != NULL_MOTION_TYPE;
     if (lastMovement.priority < MovementPriority::MOVEMENT_COMBAT && bot->isMoving() && !moveControlled)
     {
@@ -151,13 +167,12 @@ bool AttackAction::Attack(Unit* target, bool with_pet /*true*/)
         bot->StopMoving();
     }
 
-
     if (IsMovingAllowed() && !bot->HasInArc(CAST_ANGLE_IN_FRONT, target))
     {
         sServerFacade->SetFacingTo(bot, target);
     }
     botAI->ChangeEngine(BOT_STATE_COMBAT);
-    
+
     bot->Attack(target, melee);
     /* prevent pet dead immediately in group */
     // if (bot->GetMap()->IsDungeon() && bot->GetGroup() && !target->IsInCombat()) {

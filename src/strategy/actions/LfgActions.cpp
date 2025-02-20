@@ -8,15 +8,18 @@
 #include "AiFactory.h"
 #include "ItemVisitors.h"
 #include "LFGMgr.h"
-#include "LFGPackets.h"
-#include "Opcodes.h"
 #include "Playerbots.h"
-#include "World.h"
 
 using namespace lfg;
 
-
-bool LfgJoinAction::Execute(Event event) { return JoinLFG(); }
+bool LfgJoinAction::Execute(Event event)
+{  
+    if (sLFGMgr->GetState(bot->GetGUID()) != LFG_STATE_NONE || bot->GetGroup()) //当机器人已经有队伍时不排随机
+    {
+        return false;   
+    }
+    return JoinLFG();
+}
 
 uint32 LfgJoinAction::GetRoles()
 {
@@ -36,8 +39,8 @@ uint32 LfgJoinAction::GetRoles()
         case CLASS_DRUID:
             if (spec == 2)
                 return PLAYER_ROLE_HEALER;
-            else if (spec == 1)
-                return (PLAYER_ROLE_TANK | PLAYER_ROLE_DAMAGE);
+            else if (spec == 1 && bot->HasAura(16931))
+                return PLAYER_ROLE_TANK;
             else
                 return PLAYER_ROLE_DAMAGE;
             break;
@@ -86,14 +89,14 @@ bool LfgJoinAction::JoinLFG()
 {
     // check if already in lfg
     LfgState state = sLFGMgr->GetState(bot->GetGUID());
-    if (state != LFG_STATE_NONE)
+    if (state != LFG_STATE_NONE || bot->IsUsingLfg())
         return false;
 
     /*ItemCountByQuality visitor;
     IterateItems(&visitor, ITERATE_ITEMS_IN_EQUIP);
     bool random = urand(0, 100) < 20;
     bool heroic = urand(0, 100) < 50 &&
-                  (visitor.count[ITEM_QUALITY_EPIC] >= 3 || visitor.count[ITEM_QUALITY_RARE] >= 10) &&
+                  (visitor.count[ITEM_QUALITY_EPIC] >= 3 || visitor.count[ITEM_QUALITY_RARE] > 3) &&
                   bot->GetLevel() >= 70;
     bool rbotAId = !heroic && (urand(0, 100) < 50 && visitor.count[ITEM_QUALITY_EPIC] >= 5 &&
                                (bot->GetLevel() == 60 || bot->GetLevel() == 70 || bot->GetLevel() == 80));*/
@@ -144,16 +147,14 @@ bool LfgJoinAction::JoinLFG()
     if (roleMask & PLAYER_ROLE_DAMAGE)
         _roles = "DPS";
 
-    LOG_INFO("playerbots", "Bot {} {}:{} <{}>: queues LFG, Dungeon as {} ({})", bot->GetGUID().ToString().c_str(),
-             bot->GetTeamId() == TEAM_ALLIANCE ? "A" : "H", bot->GetLevel(), bot->GetName().c_str(), _roles,
-             many ? "several dungeons" : dungeon->Name[0]);
+    //禁用控制台排队信息
+    //LOG_INFO("playerbots", "Bot {} {}:{} <{}>: queues LFG, Dungeon as {} ({})", bot->GetGUID().ToString().c_str(),
+    //         bot->GetTeamId() == TEAM_ALLIANCE ? "A" : "H", bot->GetLevel(), bot->GetName().c_str(), _roles,
+    //         many ? "several dungeons" : dungeon->Name[0]);
 
     // Set RbotAId Browser comment
     std::string const _gs = std::to_string(botAI->GetEquipGearScore(bot, false, false));
-    
-    // JoinLfg is not threadsafe, so make packet and queue into session
-    // sLFGMgr->JoinLfg(bot, roleMask, list, _gs);
-
+    //sLFGMgr->JoinLfg(bot, roleMask, list, _gs);
     WorldPacket* data = new WorldPacket(CMSG_LFG_JOIN);
     *data << (uint32)roleMask;
     *data << (bool)false;
@@ -255,10 +256,22 @@ bool LfgLeaveAction::Execute(Event event)
     //    return false;
 
     // Don't leave if already invited / in dungeon
-    if (sLFGMgr->GetState(bot->GetGUID()) > LFG_STATE_QUEUED)
+    if (sLFGMgr->GetState(bot->GetGUID()) > LFG_STATE_QUEUED &&
+        sLFGMgr->GetState(bot->GetGUID()) < LFG_STATE_FINISHED_DUNGEON)//当随机本未结束时
         return false;
 
     sLFGMgr->LeaveLfg(bot->GetGUID());
+
+    if (sRandomPlayerbotMgr->IsRandomBot(bot) && bot->GetGroup() && bot->GetGroup()->isLFGGroup())
+    {
+        bot->ClearUnitState(UNIT_STATE_ALL_STATE);
+        GET_PLAYERBOT_AI(bot)->SetMaster(nullptr);
+        sRandomPlayerbotMgr->Refresh(bot);
+        botAI->ResetStrategies();
+        botAI->Reset();
+        // bot->TeleportToHomebind();
+    }
+
     return true;
 }
 
@@ -279,6 +292,27 @@ bool LfgTeleportAction::Execute(Event event)
 
     sLFGMgr->TeleportPlayer(bot, out);
 
+    // 随机本自动传送到主人身边
+    if (bot->GetGroup() && bot->GetGroup()->GetLeader() && bot->GetGroup()->isLFGGroup())
+    {
+        Player* lfgleader = bot->GetGroup()->GetLeader();
+        if (!bot->GetMap()->IsDungeon() && !bot->IsBeingTeleported() && !lfgleader->IsBeingTeleported() &&
+            bot->GetMapId() && lfgleader->GetMapId() && lfgleader->GetMap()->IsDungeon() &&
+            bot->GetMapId() != lfgleader->GetMapId())
+        {
+            if (bot->isDead())
+            {
+                bot->ResurrectPlayer(1.0f, false);
+                bot->DurabilityRepairAll(false, 1.0f, false);
+            }
+            if (!bot->inRandomLfgDungeon())  // 随机本不出来
+            {
+                bot->TeleportTo(lfgleader->GetMapId(), lfgleader->GetPositionX(),lfgleader->GetPositionY(),lfgleader->GetPositionZ(), 0);
+                botAI->SayToParty("我进随机本了");
+            // sLFGMgr->TeleportPlayer(bot, 0);
+            }
+        }
+    }
     return true;
 }
 
@@ -292,8 +326,8 @@ bool LfgJoinAction::isUseful()
 
     if (bot->GetLevel() < 15)
         return false;
-	
-	// don't use if active player master
+
+    // don't use if active player master
     if (GET_PLAYERBOT_AI(bot)->IsRealPlayer())
         return false;
 

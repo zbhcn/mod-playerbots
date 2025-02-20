@@ -323,10 +323,4 @@ public:
     Unit* GetTarget() override;
 };
 
-class CastForceOfNatureAction : public CastSpellAction
-{
-public:
-    CastForceOfNatureAction(PlayerbotAI* botAI) : CastSpellAction(botAI, "force of nature") {}
-};
-
 #endif

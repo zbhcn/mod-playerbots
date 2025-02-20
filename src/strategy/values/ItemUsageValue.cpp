@@ -354,6 +354,12 @@ ItemUsage ItemUsageValue::QueryItemUsageForEquip(ItemTemplate const* itemProto)
         //     isBetter = true;
 
         Item* item = CurrentItem(itemProto);
+        if (!item || !oldItem)
+        {
+            //防止crash空指针检测
+            return ITEM_USAGE_NONE;
+        }
+
         bool itemIsBroken =
             item && item->GetUInt32Value(ITEM_FIELD_DURABILITY) == 0 && item->GetUInt32Value(ITEM_FIELD_MAXDURABILITY) > 0;
         bool oldItemIsBroken =
@@ -634,8 +640,21 @@ Item* ItemUsageValue::CurrentItem(ItemTemplate const* proto)
 {
     Item* bestItem = nullptr;
     std::vector<Item*> found = AI_VALUE2(std::vector<Item*>, "inventory items", chat->FormatItem(proto));
+    if (found.empty())
+    {
+        return nullptr;  // 返回空值，调用者需处理
+    }
     for (auto item : found)
     {
+        if (!item)  // 跳过空指针
+            continue;
+
+        uint32 durability = item->GetUInt32Value(ITEM_FIELD_DURABILITY);
+        uint32 maxDurability = item->GetUInt32Value(ITEM_FIELD_MAXDURABILITY);
+
+        if (durability > maxDurability)  // 避免意外数据
+            continue;
+
         if (bestItem && item->GetUInt32Value(ITEM_FIELD_DURABILITY) < bestItem->GetUInt32Value(ITEM_FIELD_DURABILITY))
             continue;
 

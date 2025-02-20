@@ -4690,9 +4690,34 @@ bool ArenaTactics::Execute(Event event)
     //        botAI->ResetStrategies(false);
     //        botAI->SetMaster(nullptr);
     //    }
+    if (bot && !bot->HasAura(79999))
+        bot->AddAura(79999, bot);  // 冰霜之韧
+    //bot->SetMaxHealth(bot->GetMaxHealth() * 1.6);  // 增加bot生命值
+    if (bot && bot->GetArmor() < 50000)
+    {
+        bot->SetArmor(bot->GetArmor() + 45000);  // 增加bot护甲
+    }
 
-    if (!bot->IsInCombat())
+    //if (bg->GetStartDelayTime() < 1000 && bot && !bot->IsInCombat() &&
+    //    bot->GetVictim())  // AI_VALUE(Unit*, "enemy player target")
+    //{
+    //    bot->GetMotionMaster()->MoveChase(AI_VALUE(Unit*, "enemy player target"));
+    //    //bot->GetMotionMaster()->MoveChase(bot->GetVictim());
+    //    //bot->GetMotionMaster()->MoveChase(AI_VALUE(Unit*, "enemy player target"));
+    //    //return true;
+    //}
+    if (bg->GetStartDelayTime() < 1000 && bot)
         return moveToCenter(bg);
+
+    //竞技场风筝策略
+    //if (bot->getClass() == CLASS_HUNTER ||
+    //    bot->getClass() == CLASS_PRIEST ||
+    //    bot->getClass() == CLASS_WARLOCK ||
+    //    bot->getClass() == CLASS_MAGE)
+    //{
+    //    if (!botAI->HasStrategy("ranged", BOT_STATE_COMBAT))
+    //        botAI->ChangeStrategy("+ranged", BOT_STATE_COMBAT);
+    //}
 
     return true;
 }

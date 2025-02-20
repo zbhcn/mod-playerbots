@@ -14,8 +14,7 @@ class PlayerbotAI;
 class ReleaseSpiritAction : public Action
 {
 public:
-    ReleaseSpiritAction(PlayerbotAI* botAI, const std::string& name = "release")
-        : Action(botAI, name) {}
+    ReleaseSpiritAction(PlayerbotAI* botAI, const std::string& name = "release") : Action(botAI, name) {}
 
     bool Execute(Event event) override;
     void LogRelease(const std::string& releaseType, bool isAutoRelease = false) const;
@@ -28,7 +27,9 @@ class AutoReleaseSpiritAction : public ReleaseSpiritAction
 {
 public:
     AutoReleaseSpiritAction(PlayerbotAI* botAI, const std::string& name = "auto release")
-        : ReleaseSpiritAction(botAI, name) {}
+        : ReleaseSpiritAction(botAI, name)
+    {
+    }
 
     bool Execute(Event event) override;
     bool isUseful() override;
@@ -45,8 +46,7 @@ private:
 class RepopAction : public SpiritHealerAction
 {
 public:
-    RepopAction(PlayerbotAI* botAI, const std::string& name = "repop")
-        : SpiritHealerAction(botAI, name) {}
+    RepopAction(PlayerbotAI* botAI, const std::string& name = "repop") : SpiritHealerAction(botAI, name) {}
 
     bool Execute(Event event) override;
     bool isUseful() override;

@@ -143,6 +143,11 @@ void TradeStatusAction::BeginTrade()
 
 bool TradeStatusAction::CheckTrade()
 {
+    if (sRandomPlayerbotMgr->IsRandomBot(bot))
+    {
+        // 禁止随机机器人交易
+        return false;
+    }
     Player* trader = bot->GetTrader();
     if (!bot->GetTradeData() || !trader->GetTradeData())
         return false;
@@ -189,6 +194,9 @@ bool TradeStatusAction::CheckTrade()
     uint32 accountId = bot->GetSession()->GetAccountId();
     if (!sPlayerbotAIConfig->IsInRandomAccountList(accountId))
     {
+        // 禁止有公会的机器人交易
+        if (bot->GetGuildId())
+            return false;
         int32 botItemsMoney = CalculateCost(bot, true);
         int32 botMoney = bot->GetTradeData()->GetMoney() + botItemsMoney;
         int32 playerItemsMoney = CalculateCost(trader, false);

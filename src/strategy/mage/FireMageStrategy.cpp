@@ -6,7 +6,6 @@
 #include "FireMageStrategy.h"
 
 #include "Playerbots.h"
-#include "Strategy.h"
 
 NextAction** FireMageStrategy::getDefaultActions()
 {
@@ -33,11 +32,10 @@ void FireMageStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 
 void FireMageAoeStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 {
-    // higher priority to cast before move away
     triggers.push_back(
         new TriggerNode("medium aoe", NextAction::array(0,
             new NextAction("dragon's breath", ACTION_MOVE + 9),
-            new NextAction("flamestrike", ACTION_MOVE + 8), 
+            new NextAction("flamestrike", ACTION_MOVE + 8),
             new NextAction("blast wave", ACTION_MOVE + 7), 
             new NextAction("living bomb on attackers", 21.0f), 
             new NextAction("blizzard", 20.0f), nullptr)));

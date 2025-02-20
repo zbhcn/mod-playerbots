@@ -16,7 +16,7 @@
 
 bool AttackEnemyPlayerAction::isUseful()
 {
-    if (PlayerHasFlag::IsCapturingFlag(bot))
+    if (PlayerHasFlag::IsCapturingFlag(bot))//背棋的不攻击敌人
         return false;
 
     return !sPlayerbotAIConfig->IsPvpProhibited(bot->GetZoneId(), bot->GetAreaId());
@@ -157,7 +157,7 @@ bool AttackRtiTargetAction::Execute(Event event)
     }
     else
     {
-        botAI->TellError("I dont see my rti attack target");
+        botAI->TellError("我看不到我标记的攻击目标");
     }
 
     return false;

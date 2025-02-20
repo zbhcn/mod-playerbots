@@ -21,8 +21,7 @@ void FrostFireMageStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         new TriggerNode("hot streak", NextAction::array(0, new NextAction("pyroblast", 25.0f), nullptr)));
     triggers.push_back(
         new TriggerNode("combustion", NextAction::array(0, new NextAction("combustion", 50.0f), nullptr)));
-    triggers.push_back(
-        new TriggerNode("icy veins", NextAction::array(0, new NextAction("icy veins", 60.0f), nullptr)));
+    triggers.push_back(new TriggerNode("icy veins", NextAction::array(0, new NextAction("icy veins", 60.0f), nullptr)));
 }
 
 void FrostFireMageAoeStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
